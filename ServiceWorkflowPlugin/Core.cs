@@ -38,6 +38,7 @@ namespace ServiceWorkflowPlugin
     using Microting.eFormWorkflowBase.Infrastructure.Data.Factories;
     using Microting.WindowsService.BasePn;
     using Rebus.Bus;
+    using ServiceWorkflowPlugin.Infrastructure;
 
     [Export(typeof(ISdkEventHandler))]
     public class Core : ISdkEventHandler
@@ -103,7 +104,12 @@ namespace ServiceWorkflowPlugin
                 var dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
 
                 var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-workflow-plugin;";
+                var angularDbName = $"Initial Catalog={dbPrefix}_angular;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
+                var angularConnectionString = sdkConnectionString.Replace(dbNameSection, angularDbName);
+                var serviceWorkflowSettings = new ServiceWorkflowSettings
+                    {AngularConnectionString = angularConnectionString};
+
                 var rabbitmqHost = connectionString.Contains("frontend") ? $"frontend-{dbPrefix}-rabbitmq" : "localhost";
 
                 if (!_coreAvailable && !_coreStatChanging)
@@ -142,6 +148,7 @@ namespace ServiceWorkflowPlugin
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
                     _container.Register(Component.For<DbContextHelper>().Instance(_dbContextHelper));
                     _container.Register(Component.For<eFormCore.Core>().Instance(_sdkCore));
+                    _container.Register(Component.For<ServiceWorkflowSettings>().Instance(serviceWorkflowSettings));
                     _container.Install(
                         new RebusHandlerInstaller()
                         , new RebusInstaller(connectionString, _maxParallelism, _numberOfWorkers, "admin", "password", rabbitmqHost)
