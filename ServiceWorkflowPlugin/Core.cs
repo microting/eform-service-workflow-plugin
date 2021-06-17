@@ -33,7 +33,9 @@ namespace ServiceWorkflowPlugin
     using Castle.Windsor;
     using Infrastructure.Helpers;
     using Installers;
+    using Messages;
     using Microsoft.EntityFrameworkCore;
+    using Microting.eForm.Dto;
     using Microting.eFormWorkflowBase.Infrastructure.Data;
     using Microting.eFormWorkflowBase.Infrastructure.Data.Factories;
     using Microting.WindowsService.BasePn;
@@ -82,7 +84,24 @@ namespace ServiceWorkflowPlugin
 
         public void CaseCompleted(object sender, EventArgs args)
         {
-            // Do nothing
+            try
+            {
+                var trigger = (CaseDto)sender;
+
+                if (trigger.MicrotingUId != null && trigger.CheckUId != null)
+                {
+                    _bus.SendLocal(new eFormCompleted(
+                        (int)trigger.MicrotingUId,
+                        trigger.CheckListId,
+                        (int)trigger.CheckUId,
+                        trigger.SiteUId)
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERR] ServiceWorkOrdersPlugin.CaseCompleted: Got the following error: {ex.Message}");
+            }
         }
 
         public void CaseDeleted(object sender, EventArgs args)

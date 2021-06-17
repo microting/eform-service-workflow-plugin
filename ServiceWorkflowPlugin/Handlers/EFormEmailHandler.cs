@@ -39,6 +39,7 @@ namespace ServiceWorkflowPlugin.Handlers
     using Microting.eForm.Dto;
     using Microting.eForm.Infrastructure.Constants;
     using Microting.eForm.Infrastructure.Data.Entities;
+    using Microting.eFormApi.BasePn.Infrastructure.Database.Entities;
     using Microting.eFormApi.BasePn.Infrastructure.Database.Entities.Malling;
     using Microting.eFormWorkflowBase.Infrastructure.Data;
     using MySqlConnector;
@@ -80,8 +81,11 @@ namespace ServiceWorkflowPlugin.Handlers
         {
             try
             {
-                var sendGridKey = _dbContext.PluginConfigurationValues
-                    .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:SendGridKey")?.Value;
+                await using var sqlConnection = new MySqlConnection(_serviceWorkflowSettings.AngularConnectionString);
+                var sql = @$"
+SELECT * FROM ConfigurationValues WHERE {nameof(PluginConfigurationValue.Id)} = @id
+";
+                var sendGridKey = sqlConnection.Query<PluginConfigurationValue>(sql, new { id = "EmailSettings:SendGridKey" }).FirstOrDefault()?.Value;
                 var client = new SendGridClient(sendGridKey);
                 var fromEmailAddress = new EmailAddress(fromEmail.Replace(" ", ""), fromName);
                 var toEmail = new EmailAddress(to.Replace(" ", ""));
@@ -90,7 +94,7 @@ namespace ServiceWorkflowPlugin.Handlers
                 var file = Convert.ToBase64String(bytes);
                 msg.AddAttachment(Path.GetFileName(fileName), file);
                 var response = await client.SendEmailAsync(msg);
-                if (((int)response.StatusCode < 200) || ((int)response.StatusCode >= 300))
+                if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
                 {
                     throw new Exception($"Status: {response.StatusCode}");
                 }
