@@ -93,18 +93,18 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.DateOfIncedent = DateTime.Parse(fields[0].FieldValues[0].Value);
+                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
                         }
 
                         if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentType = fields[1].FieldValues[0].Value;
+                            workflowCase.IncidentType = fields[1].FieldValues[0].Value;
                         }
 
 
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
@@ -137,12 +137,12 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.DateOfIncedent = DateTime.Parse(fields[0].FieldValues[0].Value);
+                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
                         }
 
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
