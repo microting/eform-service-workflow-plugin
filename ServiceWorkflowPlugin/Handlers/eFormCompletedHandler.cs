@@ -1,4 +1,4 @@
-﻿/*
+/*
 The MIT License (MIT)
 Copyright (c) 2007 - 2021 Microting A/S
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,12 +34,12 @@ namespace ServiceWorkflowPlugin.Handlers
     using Rebus.Handlers;
     using Microting.eFormWorkflowBase.Infrastructure.Data;
 
-    public class eFormCompletedHandler : IHandleMessages<eFormCompleted>
+    public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
     {
         private readonly Core _sdkCore;
         private readonly WorkflowPnDbContext _dbContext;
 
-        public eFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper)
+        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper)
         {
             _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
@@ -93,18 +93,18 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.DateOfIncedent = DateTime.Parse(fields[0].FieldValues[0].Value);
+                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
                         }
 
                         if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentType = fields[1].FieldValues[0].Value;
+                            workflowCase.IncidentType = fields[1].FieldValues[0].Value;
                         }
 
 
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
@@ -122,8 +122,8 @@ namespace ServiceWorkflowPlugin.Handlers
                 else if(message.CheckId == secondEformId)
                 {
                     var workflowCase = await _dbContext.WorkflowCases
-                        .Where(x => x.MicrotingId == message.MicrotingId)
-                        .FirstOrDefaultAsync();
+                        .Where(x => x.Status == "Ongoing" && x.ActionPlan == "")
+                        .LastOrDefaultAsync();
 
                     var language = await sdkDbContext.Languages
                         .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
@@ -137,19 +137,19 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.DateOfIncedent = DateTime.Parse(fields[0].FieldValues[0].Value);
+                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
                         }
 
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncedentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
 
                         if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.Description += fields[4].FieldValues[0].Value;
+                            workflowCase.Description = fields[4].FieldValues[0].Value;
                         }
 
                         if (!string.IsNullOrEmpty(fields[5]?.FieldValues[0]?.Value))
@@ -173,6 +173,7 @@ namespace ServiceWorkflowPlugin.Handlers
                         workflowCase.SolvedBy = doneBy;
 
                         await workflowCase.Update(_dbContext);
+                        await _sdkCore.CaseDelete(message.MicrotingId);
                     }
                 }
             }

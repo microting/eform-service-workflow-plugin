@@ -37,7 +37,7 @@ namespace ServiceWorkflowPlugin.Installers
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             container.Register(Component.For<IHandleMessages<QueueEformEmail>>().ImplementedBy<EFormEmailHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<eFormCompletedHandler>().LifestyleTransient());
+            container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
         }
     }
 }
