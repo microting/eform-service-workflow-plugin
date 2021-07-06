@@ -39,8 +39,3 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Unit Tests
       run: dotnet test --no-restore -c Release -v n ServiceWorkflowPlugin.Integration.Test/ServiceWorkflowPlugin.Integration.Test.csproj
-    - name: The job has failed
-      if: ${{ failure() }}
-      run: |
-        cat dotnet_log
-        cat eform-angular-frontend/eform-client/npm_log
