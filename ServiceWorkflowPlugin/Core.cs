@@ -122,8 +122,8 @@ namespace ServiceWorkflowPlugin
                 var dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
                 var dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
 
-                var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-workflow-plugin;";
-                var angularDbName = $"Initial Catalog={dbPrefix}_angular;";
+                var pluginDbName = $"Database={dbPrefix}_eform-angular-workflow-plugin;";
+                var angularDbName = $"Database={dbPrefix}_angular;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
                 var angularConnectionString = sdkConnectionString.Replace(dbNameSection, angularDbName);
                 var serviceWorkflowSettings = new ServiceWorkflowSettings
