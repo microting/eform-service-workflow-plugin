@@ -72,7 +72,10 @@ namespace ServiceWorkflowPlugin.Handlers
 
                 await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
-                if (message.CheckId == firstEformId)
+                var cls = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
+                    x.MicrotingUid == message.MicrotingId);
+
+                if (cls.CheckListId == firstEformId)
                 {
                     var workflowCase = new WorkflowCase
                     {
