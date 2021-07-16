@@ -4,7 +4,7 @@ GIT_STATUS=`git status | grep "nothing to commit, working tree clean" | wc -l`
 if (( "$GIT_STATUS" > 0 )); then
 	git checkout master
 	git pull
-	cd WorkflowPlugin
+	cd ServiceWorkflowPlugin
   CURRENT_NUMBER_OF_COMMITS=`git log --oneline | wc -l`
 
 	PACKAGES=('Microting.eForm' 'Microting.eFormApi.BasePn' 'Microting.WorkflowBase')
