@@ -7,7 +7,7 @@ if (( "$GIT_STATUS" > 0 )); then
 	cd ServiceWorkflowPlugin
   CURRENT_NUMBER_OF_COMMITS=`git log --oneline | wc -l`
 
-	PACKAGES=('Microting.eForm' 'Microting.eFormApi.BasePn' 'Microting.WorkflowBase')
+	PACKAGES=('Microting.eForm' 'Microting.eFormApi.BasePn' 'Microting.eFormWorkflowBase')
 	PROJECT_NAME='ServiceWorkflowPlugin.csproj'
 	REPOSITORY='eform-service-workflow-plugin'
 
