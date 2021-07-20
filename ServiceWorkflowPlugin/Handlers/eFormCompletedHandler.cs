@@ -19,6 +19,9 @@ SOFTWARE.
 */
 
 
+using System.Collections.Generic;
+using Microting.eForm.Dto;
+
 namespace ServiceWorkflowPlugin.Handlers
 {
     using System;
@@ -38,6 +41,8 @@ namespace ServiceWorkflowPlugin.Handlers
     {
         private readonly Core _sdkCore;
         private readonly WorkflowPnDbContext _dbContext;
+        private bool _s3Enabled;
+        private bool _swiftEnabled;
 
         public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper)
         {
@@ -50,6 +55,8 @@ namespace ServiceWorkflowPlugin.Handlers
 
             try
             {
+                _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
+                _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
                 var firstEformIdValue = _dbContext.PluginConfigurationValues
                     .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:FirstEformId")?.Value;
 
@@ -92,6 +99,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     var checkListValue = replyElement.ElementList[0] as CheckListValue;
                     var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
 
+                    var picturesOfTasks = new List<string>();
                     if (fields!.Any())
                     {
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
@@ -112,6 +120,17 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
 
+                        if(fields[2].FieldValues.Count > 0)
+                        {
+                            foreach(FieldValue fieldValue in fields[3].FieldValues)
+                            {
+                                if (fieldValue.UploadedDataObj != null)
+                                {
+                                    picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
+                                }
+                            }
+                        }
+
                         if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
                         {
                             workflowCase.Description = fields[4].FieldValues[0].Value;
@@ -121,6 +140,17 @@ namespace ServiceWorkflowPlugin.Handlers
                     workflowCase.CreatedByUserId = replyElement.SiteMicrotingUuid;
                     workflowCase.UpdatedByUserId = replyElement.SiteMicrotingUuid;
                     await workflowCase.Create(_dbContext);
+
+                    foreach (var picturesOfTask in picturesOfTasks)
+                    {
+                        var pictureOfTask = new PicturesOfTask
+                        {
+                            FileName = picturesOfTask,
+                            WorkflowCaseId = workflowCase.Id,
+                        };
+
+                        await pictureOfTask.Create(_dbContext);
+                    }
                 }
                 else if(message.CheckId == secondEformId)
                 {
