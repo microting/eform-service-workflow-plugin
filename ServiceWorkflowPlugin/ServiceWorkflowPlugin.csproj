@@ -19,7 +19,7 @@
     <PackageReference Include="SendGrid" Version="9.24.1" />
     <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
     <PackageReference Include="Microting.eFormApi.BasePn" Version="3.0.31" />
-    <PackageReference Include="Microting.eFormWorkflowBase" Version="1.0.11" />
+    <PackageReference Include="Microting.eFormWorkflowBase" Version="1.0.12" />
   </ItemGroup>
 
 </Project>
