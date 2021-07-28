@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microsoft.EntityFrameworkCore;
+using Microting.EformAngularFrontendBase.Infrastructure.Data;
+
 namespace ServiceWorkflowPlugin.Handlers
 {
     using System;
@@ -51,13 +54,13 @@ namespace ServiceWorkflowPlugin.Handlers
     {
         private readonly eFormCore.Core _sdkCore;
         private readonly WorkflowPnDbContext _dbContext;
-        private readonly ServiceWorkflowSettings _serviceWorkflowSettings;
+        private readonly BaseDbContext _baseDbContext;
 
-        public EFormEmailHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, ServiceWorkflowSettings serviceWorkflowSettings)
+        public EFormEmailHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext)
         {
             _dbContext = dbContextHelper.GetDbContext();
             _sdkCore = sdkCore;
-            _serviceWorkflowSettings = serviceWorkflowSettings;
+            _baseDbContext = baseDbContext;
         }
 
         public async Task Handle(QueueEformEmail message)
@@ -81,12 +84,10 @@ namespace ServiceWorkflowPlugin.Handlers
         {
             try
             {
-                await using var sqlConnection = new MySqlConnection(_serviceWorkflowSettings.AngularConnectionString);
-                var sql = @$"
-SELECT * FROM ConfigurationValues WHERE {nameof(PluginConfigurationValue.Id)} = @id
-";
-                var sendGridKey = sqlConnection.Query<PluginConfigurationValue>(sql, new { id = "EmailSettings:SendGridKey" }).FirstOrDefault()?.Value;
-                var client = new SendGridClient(sendGridKey);
+
+                var sendGridKey =
+                    _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
+                var client = new SendGridClient(sendGridKey.Value);
                 var fromEmailAddress = new EmailAddress(fromEmail.Replace(" ", ""), fromName);
                 var toEmail = new EmailAddress(to.Replace(" ", ""));
                 var msg = MailHelper.CreateSingleEmail(fromEmailAddress, toEmail, subject, text, html);
@@ -111,12 +112,7 @@ SELECT * FROM ConfigurationValues WHERE {nameof(PluginConfigurationValue.Id)} = 
 
         private async Task GenerateReportAndSendEmail(Language language, string userName, int caseId)
         {
-
-            await using var userConnection = new MySqlConnection(_serviceWorkflowSettings.AngularConnectionString);
-            var sql = @$"
-SELECT * FROM EmailRecipients WHERE {nameof(EmailRecipient.Name)} = @name AND {nameof(EmailRecipient.WorkflowState)} <> {Constants.WorkflowStates.Removed}
-";
-            var emailRecipient = userConnection.Query<EmailRecipient>(sql, new { name = userName }).FirstOrDefault();
+            var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName);
             var caseDto = await _sdkCore.CaseLookupCaseId(caseId);
             var replyElement = await _sdkCore.CaseRead((int)caseDto.MicrotingUId, (int)caseDto.CheckUId, language);
             var assembly = Assembly.GetExecutingAssembly();

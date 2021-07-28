@@ -109,13 +109,15 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncidentType = fields[1].FieldValues[0].Value;
+                            workflowCase.IncidentTypeId = int.Parse(fields[1].FieldValues[0].Value);
+                            workflowCase.IncidentType = fields[1].FieldValues[0].ValueReadable;
                         }
 
 
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.IncidentPlaceId = int.Parse(fields[2].FieldValues[0].Value);
+                            workflowCase.IncidentPlace = fields[2].FieldValues[0].ValueReadable;
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
