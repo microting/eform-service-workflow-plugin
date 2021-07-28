@@ -99,7 +99,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     var checkListValue = replyElement.ElementList[0] as CheckListValue;
                     var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
 
-                    var picturesOfTasks = new List<string>();
+                    var picturesOfTasks = new List<FieldValue>();
                     if (fields!.Any())
                     {
                         if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
@@ -126,7 +126,8 @@ namespace ServiceWorkflowPlugin.Handlers
                             {
                                 if (fieldValue.UploadedDataObj != null)
                                 {
-                                    picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
+                                    picturesOfTasks.Add(fieldValue);
+                                    //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
                                 }
                             }
                         }
@@ -145,8 +146,11 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         var pictureOfTask = new PicturesOfTask
                         {
-                            FileName = picturesOfTask,
+                            FileName = $"{picturesOfTask.UploadedDataObj.Id}_700_{picturesOfTask.UploadedDataObj.Checksum}{picturesOfTask.UploadedDataObj.Extension}",
                             WorkflowCaseId = workflowCase.Id,
+                            UploadedDataId = picturesOfTask.UploadedDataObj.Id,
+                            Longitude = picturesOfTask.Longitude,
+                            Latitude = picturesOfTask.Latitude
                         };
 
                         await pictureOfTask.Create(_dbContext);
