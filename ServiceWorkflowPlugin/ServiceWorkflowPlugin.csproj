@@ -22,5 +22,9 @@
     <PackageReference Include="Microting.eFormApi.BasePn" Version="3.0.34" />
     <PackageReference Include="Microting.eFormWorkflowBase" Version="1.0.18" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\report.docx" />
+    <EmbeddedResource Include="Resources\report.docx" />
+  </ItemGroup>
 
 </Project>
