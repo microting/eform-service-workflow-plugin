@@ -21,37 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-namespace ServiceWorkflowPlugin.Messages
+namespace Workflow.Pn.Messages
 {
     using System.Collections.Generic;
     using Microting.eForm.Infrastructure.Data.Entities;
 
     public class QueueEformEmail
     {
-        public QueueEformEmail(
-            int caseId,
-            List<KeyValuePair<string, Language>> listSolvedUser,
-            string userName,
-            Language currentUserLanguage
-            )
-        {
-            CaseId = caseId;
-            SolvedUser = listSolvedUser;
-            UserName = userName;
-            CurrentUserLanguage = currentUserLanguage;
-        }
+        public int CaseId { get; set; }
 
-        public int CaseId { get; protected set; }
-
-        /// <summary>
-        /// key - user name, value - language
-        /// </summary>
-        /// <value>The solved user.</value>
-        public List<KeyValuePair<string, Language>> SolvedUser { get; protected set; }
-
-        public string UserName { get; protected set; }
-
-        public Language CurrentUserLanguage { get; protected set; }
+        // /// <summary>
+        // /// key - user name, value - language
+        // /// </summary>
+        // public List<KeyValuePair<string, int>> SolvedUser { get; set; }
+        //
+        // public string UserName { get; set; }
+        //
+        // public int CurrentUserLanguageId { get; set; }
 
     }
 }

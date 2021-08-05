@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 
+using Workflow.Pn.Messages;
+
 namespace ServiceWorkflowPlugin.Installers
 {
     using Castle.MicroKernel.Registration;

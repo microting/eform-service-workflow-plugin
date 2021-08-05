@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Rebus.Logging;
+
 namespace ServiceWorkflowPlugin.Installers
 {
     using System;
@@ -56,7 +58,7 @@ namespace ServiceWorkflowPlugin.Installers
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             Configure.With(new CastleWindsorContainerAdapter(container))
-                .Logging(l => l.ColoredConsole())
+                .Logging(l => l.ColoredConsole(LogLevel.Info))
                 .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", "eform-service-workflow-plugin"))
                 .Options(o =>
                 {

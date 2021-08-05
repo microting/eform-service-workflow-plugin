@@ -23,7 +23,10 @@ SOFTWARE.
 */
 
 using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
+using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
+using Workflow.Pn.Messages;
 
 namespace ServiceWorkflowPlugin.Handlers
 {
@@ -65,11 +68,20 @@ namespace ServiceWorkflowPlugin.Handlers
 
         public async Task Handle(QueueEformEmail message)
         {
-            Debugger.Break();
-            await GenerateReportAndSendEmail(message.CurrentUserLanguage, message.UserName, message.CaseId);
-            foreach (var (userName, language) in message.SolvedUser)
+            WorkflowCase workflowCase = await _dbContext.WorkflowCases.SingleOrDefaultAsync(x => x.Id == message.CaseId);
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            Microting.eForm.Infrastructure.Data.Entities.Case _case = await
+                sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == workflowCase.CheckMicrotingUid);
+            Site createdBySite = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.Id == _case.SiteId);
+
+            await GenerateReportAndSendEmail(createdBySite.LanguageId, createdBySite.Name, message.CaseId);
+
+            if (!string.IsNullOrEmpty(workflowCase.SolvedBy))
             {
-                await GenerateReportAndSendEmail(language, userName, message.CaseId);
+                Site site = await sdkDbContext.Sites.SingleOrDefaultAsync(x =>
+                    x.Name == workflowCase.SolvedBy);
+
+                await GenerateReportAndSendEmail(site.LanguageId, site.Name, message.CaseId);
             }
         }
 
@@ -110,10 +122,12 @@ namespace ServiceWorkflowPlugin.Handlers
             }
         }
 
-        private async Task GenerateReportAndSendEmail(Language language, string userName, int caseId)
+        private async Task GenerateReportAndSendEmail(int languageId, string userName, int caseId)
         {
             var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName);
             var caseDto = await _sdkCore.CaseLookupCaseId(caseId);
+            await using MicrotingDbContext sdkDbConetxt = _sdkCore.DbContextHelper.GetDbContext();
+            Language language = await sdkDbConetxt.Languages.SingleOrDefaultAsync(x => x.Id == languageId);
             var replyElement = await _sdkCore.CaseRead((int)caseDto.MicrotingUId, (int)caseDto.CheckUId, language);
             var assembly = Assembly.GetExecutingAssembly();
             var assemblyName = assembly.GetName().Name;
