@@ -20,7 +20,13 @@ SOFTWARE.
 
 
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
 using Microting.eForm.Dto;
+using Microting.EformAngularFrontendBase.Infrastructure.Data;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace ServiceWorkflowPlugin.Handlers
 {
@@ -43,11 +49,13 @@ namespace ServiceWorkflowPlugin.Handlers
         private readonly WorkflowPnDbContext _dbContext;
         private bool _s3Enabled;
         private bool _swiftEnabled;
+        private readonly BaseDbContext _baseDbContext;
 
-        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper)
+        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext)
         {
             _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
+            _baseDbContext = baseDbContext;
         }
         public async Task Handle(eFormCompleted message)
         {
@@ -157,6 +165,47 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         await pictureOfTask.Create(_dbContext);
                     }
+
+                    var assembly = Assembly.GetExecutingAssembly();
+                    var assemblyName = assembly.GetName().Name;
+                    var stream = assembly.GetManifestResourceStream($"{assemblyName}.Resources.Email.html");
+                    string html;
+                    if (stream == null)
+                    {
+                        throw new InvalidOperationException("Resource not found");
+                    }
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        html = await reader.ReadToEndAsync();
+                    }
+                    html = html
+                        .Replace("{{link}}",
+                            $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
+                        .Replace("{{text}}", "");
+
+                    var sendGridKey =
+                        _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
+                    List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
+                    List<EmailAddress> emailAddresses = new List<EmailAddress>();
+                    foreach (string recepient in recepients)
+                    {
+                        emailAddresses.Add(new EmailAddress(recepient));
+                    }
+                    var client = new SendGridClient(sendGridKey.Value);
+                    string text = "";
+                    var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
+                    //var toEmail = new EmailAddress(to.Replace(" ", ""));
+                    var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
+                        $"{workflowCase.CreatedAt:dd-MM-yyyy}; {workflowCase.IncidentType}; {workflowCase.IncidentPlace}",
+                        "", html);
+                    // var bytes = await File.ReadAllBytesAsync(fileName);
+                    // var file = Convert.ToBase64String(bytes);
+                    // msg.AddAttachment(Path.GetFileName(fileName), file);
+                    var response = await client.SendEmailAsync(msg);
+                    if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                    {
+                        throw new Exception($"Status: {response.StatusCode}");
+                    }
                 }
                 else if(message.CheckId == secondEformId)
                 {
@@ -196,7 +245,6 @@ namespace ServiceWorkflowPlugin.Handlers
                                 if (fieldValue.UploadedDataObj != null)
                                 {
                                     picturesOfTasks.Add(fieldValue);
-                                    //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
                                 }
                             }
                         }
@@ -214,11 +262,6 @@ namespace ServiceWorkflowPlugin.Handlers
 
                             await pictureOfTask.Create(_dbContext);
                         }
-
-                        // var doneBy = sdkDbContext.Workers
-                        //     .Single(x => x.Id == replyElement.DoneById).full_name();
-                        //
-                        // workflowCase. = doneBy;
 
                         await workflowCase.Update(_dbContext);
                         await _sdkCore.CaseDelete(message.MicrotingId);
