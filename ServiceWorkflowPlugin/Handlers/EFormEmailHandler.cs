@@ -89,10 +89,8 @@ namespace ServiceWorkflowPlugin.Handlers
                 {
                     await GenerateReportAndSendEmail(site.LanguageId, site.Name, message.CaseId, workflowCase, _case);
                 }
-
             }
         }
-
 
         private async Task SendFileAsync(
             string fromEmail,
@@ -104,14 +102,13 @@ namespace ServiceWorkflowPlugin.Handlers
         {
             try
             {
-
                 var sendGridKey =
                     _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
                 var client = new SendGridClient(sendGridKey.Value);
                 var fromEmailAddress = new EmailAddress(fromEmail.Replace(" ", ""), fromName);
                 var toEmail = new EmailAddress(to.Replace(" ", ""));
                 var msg = MailHelper.CreateSingleEmail(fromEmailAddress, toEmail, subject, text, html);
-                var bytes = File.ReadAllBytes(fileName);
+                var bytes = await File.ReadAllBytesAsync(fileName);
                 var file = Convert.ToBase64String(bytes);
                 msg.AddAttachment(Path.GetFileName(fileName), file);
                 var response = await client.SendEmailAsync(msg);
@@ -133,10 +130,7 @@ namespace ServiceWorkflowPlugin.Handlers
         private async Task GenerateReportAndSendEmail(int languageId, string userName, int caseId, WorkflowCase workflowCase, Microting.eForm.Infrastructure.Data.Entities.Case _case)
         {
             var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName);
-            //var caseDto = await _sdkCore.CaseLookupCaseId(caseId);
             await using MicrotingDbContext sdkDbConetxt = _sdkCore.DbContextHelper.GetDbContext();
-            //Language language = await sdkDbConetxt.Languages.SingleOrDefaultAsync(x => x.Id == languageId);
-            //var replyElement = await _sdkCore.CaseRead((int)_case.MicrotingUid, (int)_case.MicrotingCheckUid, language);
             var assembly = Assembly.GetExecutingAssembly();
             var assemblyName = assembly.GetName().Name;
             var stream = assembly.GetManifestResourceStream($"{assemblyName}.Resources.Email.html");
@@ -154,7 +148,6 @@ namespace ServiceWorkflowPlugin.Handlers
                     $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{caseId}")
                 .Replace("{{text}}", "");
 
-
             List<KeyValuePair<string, List<string>>> pictures = new List<KeyValuePair<string, List<string>>>();
             Site createdBySite = await sdkDbConetxt.Sites.SingleOrDefaultAsync(x => x.Id == _case.SiteId);
 
@@ -171,7 +164,6 @@ namespace ServiceWorkflowPlugin.Handlers
                 {"{incident_status}", workflowCase.Status}
             };
 
-
             foreach (PicturesOfTask picturesOfTask in await _dbContext.PicturesOfTasks.Where(x => x.WorkflowCaseId == caseId).ToListAsync())
             {
                 UploadedData uploadedData =
@@ -185,7 +177,6 @@ namespace ServiceWorkflowPlugin.Handlers
 
                 string fileName =
                     $"{uploadedData.Id}_700_{uploadedData.Checksum}{uploadedData.Extension}";
-
 
                 string fileContent = "";
                 using GetObjectResponse response =
@@ -220,7 +211,6 @@ namespace ServiceWorkflowPlugin.Handlers
                 string fileName =
                     $"{uploadedData.Id}_700_{uploadedData.Checksum}{uploadedData.Extension}";
 
-
                 string fileContent = "";
                 using GetObjectResponse response =
                     await _sdkCore.GetFileFromS3Storage(fileName);
@@ -249,14 +239,12 @@ namespace ServiceWorkflowPlugin.Handlers
                 $"{timeStamp}_{caseId}.docx");
 
 
-            using (var fileStream = File.Create(resultDocument))
+            await using (var fileStream = File.Create(resultDocument))
             {
-                stream.CopyTo(fileStream);
+                if (stream != null) await stream.CopyToAsync(fileStream);
             }
 
-
             ReportHelper.SearchAndReplace(valuePairs, resultDocument);
-
 
             ReportHelper.InsertImages(resultDocument, pictures);
             string outputFolder = Path.Combine(Path.GetTempPath(), "results");
@@ -265,26 +253,6 @@ namespace ServiceWorkflowPlugin.Handlers
 
             string filePath = Path.Combine(Path.GetTempPath(), "results",
                 $"{timeStamp}_{caseId}.pdf");
-
-
-            // // Fix for broken SDK not handling empty customXmlContent well
-            // var customXmlContent = new XElement("FillerElement",
-            //     new XElement("InnerElement", "SomeValue")).ToString();
-            //
-            // // get report file
-            // var filePath = await _sdkCore.CaseToPdf(
-            //     caseId,
-            //     replyElement.Id.ToString(),
-            //     DateTime.Now.ToString("yyyyMMddHHmmssffff"),
-            //     $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/" +
-            //     "api/template-files/get-image/",
-            //     "pdf",
-            //     customXmlContent, language);
-            //
-            // if (!File.Exists(filePath))
-            // {
-            //     throw new Exception("Error while creating report file");
-            // }
 
             await SendFileAsync(
                 "no-reply@microting.com",
