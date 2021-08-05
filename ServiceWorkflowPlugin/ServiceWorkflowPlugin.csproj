@@ -25,6 +25,12 @@
   <ItemGroup>
     <None Remove="Resources\report.docx" />
     <EmbeddedResource Include="Resources\report.docx" />
+    <None Remove="Resources\Email.html" />
+    <EmbeddedResource Include="Resources\Email.html" />
+    <None Remove="Resources\Templates\file.docx" />
+    <EmbeddedResource Include="Resources\Templates\file.docx" />
+    <None Remove="Resources\Templates\page.html" />
+    <EmbeddedResource Include="Resources\Templates\page.html" />
   </ItemGroup>
 
 </Project>

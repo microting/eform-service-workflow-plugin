@@ -85,7 +85,11 @@ namespace ServiceWorkflowPlugin.Handlers
                 Site site = await sdkDbContext.Sites.SingleOrDefaultAsync(x =>
                     x.Name == workflowCase.SolvedBy);
 
-                await GenerateReportAndSendEmail(site.LanguageId, site.Name, message.CaseId, workflowCase, _case);
+                if (workflowCase.SolvedBy != createdBySite.Name)
+                {
+                    await GenerateReportAndSendEmail(site.LanguageId, site.Name, message.CaseId, workflowCase, _case);
+                }
+
             }
         }
 
@@ -162,7 +166,7 @@ namespace ServiceWorkflowPlugin.Handlers
                 {"{incident_location}", workflowCase.IncidentPlace},
                 {"{incident_description}", workflowCase.Description.Replace("&", "&amp;")},
                 {"{incident_deadline}", workflowCase.Deadline?.ToString("dd-MM-yyyy")},
-                {"{incident_action_plan}", workflowCase.ActionPlan.Replace("&", "&amp;")},
+                {"{incident_action_plan}", workflowCase.ActionPlan?.Replace("&", "&amp;")},
                 {"{incident_solved_by}", workflowCase.SolvedBy},
                 {"{incident_status}", workflowCase.Status}
             };
@@ -288,6 +292,7 @@ namespace ServiceWorkflowPlugin.Handlers
                 $"{workflowCase.CreatedAt:dd-MM-yyyy}; {workflowCase.IncidentType}; {workflowCase.IncidentPlace}",
                 emailRecipient?.Email,
                 filePath,
+                null,
                 html);
         }
     }
