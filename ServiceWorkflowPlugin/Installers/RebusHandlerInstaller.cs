@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 
-using Workflow.Pn.Messages;
+using Microting.eFormWorkflowBase.Messages;
 
 namespace ServiceWorkflowPlugin.Installers
 {

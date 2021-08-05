@@ -26,7 +26,7 @@ using Microsoft.EntityFrameworkCore;
 using Microting.eForm.Infrastructure;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
-using Workflow.Pn.Messages;
+using Microting.eFormWorkflowBase.Messages;
 
 namespace ServiceWorkflowPlugin.Handlers
 {

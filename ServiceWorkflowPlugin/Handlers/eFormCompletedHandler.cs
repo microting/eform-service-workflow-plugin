@@ -79,7 +79,7 @@ namespace ServiceWorkflowPlugin.Handlers
 
                 await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
-                var cls = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
+                var cls = await sdkDbContext.Cases.FirstOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingId);
 
                 if (cls.CheckListId == firstEformId)
@@ -161,8 +161,8 @@ namespace ServiceWorkflowPlugin.Handlers
                 else if(message.CheckId == secondEformId)
                 {
                     var workflowCase = await _dbContext.WorkflowCases
-                        .Where(x => x.Status == "Ongoing" && x.ActionPlan == "")
-                        .LastOrDefaultAsync();
+                        .Where(x => x.DeployedMicrotingUid == message.MicrotingId)
+                        .SingleOrDefaultAsync();
 
                     var language = await sdkDbContext.Languages
                         .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
@@ -171,45 +171,54 @@ namespace ServiceWorkflowPlugin.Handlers
                     var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
 
 
+                    var picturesOfTasks = new List<FieldValue>();
                     if (fields!.Any())
                     {
-
-                        if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
-                        {
-                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
-                        }
-
                         if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.IncidentPlace = fields[2].FieldValues[0].Value;
+                            workflowCase.Description = fields[2].FieldValues[0].Value;
                         }
-
-                        workflowCase.PhotosExist = fields[3].FieldValues.Any();
 
                         if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
                         {
                             workflowCase.Description = fields[4].FieldValues[0].Value;
                         }
 
-                        if (!string.IsNullOrEmpty(fields[5]?.FieldValues[0]?.Value))
+                        if (!string.IsNullOrEmpty(fields[3]?.FieldValues[0]?.Value))
                         {
-                            workflowCase.Deadline = DateTime.Parse(fields[5].FieldValues[0].Value);
+                            workflowCase.ActionPlan = fields[3].FieldValues[0].Value;
                         }
 
-                        if (!string.IsNullOrEmpty(fields[6]?.FieldValues[0]?.Value))
+                        if(fields[4].FieldValues.Count > 0)
                         {
-                            workflowCase.ActionPlan = fields[6].FieldValues[0].Value;
+                            foreach(FieldValue fieldValue in fields[4].FieldValues)
+                            {
+                                if (fieldValue.UploadedDataObj != null)
+                                {
+                                    picturesOfTasks.Add(fieldValue);
+                                    //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
+                                }
+                            }
                         }
 
-                        if (!string.IsNullOrEmpty(fields[8]?.FieldValues[0]?.Value))
+                        foreach (var picturesOfTask in picturesOfTasks)
                         {
-                            workflowCase.Status = fields[8].FieldValues[0].Value;
+                            var pictureOfTask = new PicturesOfTaskDone
+                            {
+                                FileName = $"{picturesOfTask.UploadedDataObj.Id}_700_{picturesOfTask.UploadedDataObj.Checksum}{picturesOfTask.UploadedDataObj.Extension}",
+                                WorkflowCaseId = workflowCase.Id,
+                                UploadedDataId = picturesOfTask.UploadedDataObj.Id,
+                                Longitude = picturesOfTask.Longitude,
+                                Latitude = picturesOfTask.Latitude
+                            };
+
+                            await pictureOfTask.Create(_dbContext);
                         }
 
-                        var doneBy = sdkDbContext.Workers
-                            .Single(x => x.Id == replyElement.DoneById).full_name();
-
-                        workflowCase.SolvedBy = doneBy;
+                        // var doneBy = sdkDbContext.Workers
+                        //     .Single(x => x.Id == replyElement.DoneById).full_name();
+                        //
+                        // workflowCase. = doneBy;
 
                         await workflowCase.Update(_dbContext);
                         await _sdkCore.CaseDelete(message.MicrotingId);
@@ -218,7 +227,7 @@ namespace ServiceWorkflowPlugin.Handlers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ERR] ServiceWorkOrdersPlugin.CaseCompleted: Got the following error: {ex.Message}");
+                Console.WriteLine($"[ERR] ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
             }
         }
     }
