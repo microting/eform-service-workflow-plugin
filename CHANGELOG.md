@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.0.11](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.11) (2021-08-18)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.10...v1.0.11)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormWorkflowBase from 1.0.24 to 1.0.25 [\#74](https://github.com/microting/eform-service-workflow-plugin/issues/74)
+- Bump Microting.eFormApi.BasePn from 3.0.42 to 3.0.43 [\#73](https://github.com/microting/eform-service-workflow-plugin/issues/73)
+- Bump Microting.eForm from 5.2.32 to 5.2.33 [\#72](https://github.com/microting/eform-service-workflow-plugin/issues/72)
+
 ## [v1.0.10](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.10) (2021-08-12)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.9...v1.0.10)
@@ -90,7 +100,6 @@
 
 **Merged pull requests:**
 
-- Bump Pomelo.EntityFrameworkCore.MySql from 5.0.0 to 5.0.1 [\#6](https://github.com/microting/eform-service-workflow-plugin/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump NUnit3TestAdapter from 3.17.0 to 4.0.0 [\#3](https://github.com/microting/eform-service-workflow-plugin/pull/3) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 ## [v1.0.1](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.1) (2021-07-08)
@@ -107,6 +116,7 @@
 
 **Merged pull requests:**
 
+- Bump Pomelo.EntityFrameworkCore.MySql from 5.0.0 to 5.0.1 [\#6](https://github.com/microting/eform-service-workflow-plugin/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Updates [\#2](https://github.com/microting/eform-service-workflow-plugin/pull/2) ([Gid733](https://github.com/Gid733))
 - Create service [\#1](https://github.com/microting/eform-service-workflow-plugin/pull/1) ([sanioooook](https://github.com/sanioooook))
 
