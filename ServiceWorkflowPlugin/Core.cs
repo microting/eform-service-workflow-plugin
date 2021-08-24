@@ -166,8 +166,10 @@ namespace ServiceWorkflowPlugin
                         .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:NumberOfWorkers")?.Value;
                     _numberOfWorkers = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
 
+                    var emailHelper = new EmailHelper(_sdkCore, _dbContextHelper, _baseDbContext);
 
                     _container = new WindsorContainer();
+                    _container.Register(Component.For<EmailHelper>().Instance(emailHelper));
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
                     _container.Register(Component.For<DbContextHelper>().Instance(_dbContextHelper));
                     _container.Register(Component.For<eFormCore.Core>().Instance(_sdkCore));

@@ -24,6 +24,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Microting.eForm.Dto;
+using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using SendGrid;
 using SendGrid.Helpers.Mail;
@@ -50,12 +51,14 @@ namespace ServiceWorkflowPlugin.Handlers
         private bool _s3Enabled;
         private bool _swiftEnabled;
         private readonly BaseDbContext _baseDbContext;
+        private readonly EmailHelper _emailHelper;
 
-        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext)
+        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext, EmailHelper emailHelper)
         {
             _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
             _baseDbContext = baseDbContext;
+            _emailHelper = emailHelper;
         }
         public async Task Handle(eFormCompleted message)
         {
@@ -138,6 +141,7 @@ namespace ServiceWorkflowPlugin.Handlers
                                 {
                                     picturesOfTasks.Add(fieldValue);
                                     //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
+                                    workflowCase.NumberOfPhotos += 1;
                                 }
                             }
                         }
@@ -148,7 +152,10 @@ namespace ServiceWorkflowPlugin.Handlers
                         }
                     }
 
+                    Site site = await sdkDbContext.Sites
+                        .SingleOrDefaultAsync(x => x.MicrotingUid == replyElement.SiteMicrotingUuid);
                     workflowCase.CreatedByUserId = replyElement.SiteMicrotingUuid;
+                    workflowCase.CreatedBySiteName = site.Name;
                     workflowCase.UpdatedByUserId = replyElement.SiteMicrotingUuid;
                     await workflowCase.Create(_dbContext);
 
@@ -178,10 +185,16 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         html = await reader.ReadToEndAsync();
                     }
+
                     html = html
                         .Replace("{{link}}",
                             $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
-                        .Replace("{{text}}", "");
+                        .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
+                        .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
+                        .Replace("{{Type}}", workflowCase.IncidentType)
+                        .Replace("{{Location}}", workflowCase.IncidentPlace)
+                        .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
+                        .Replace("<p>Ansvarlig: {{SolvedBy}}</p>", "");
 
                     var sendGridKey =
                         _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
@@ -196,7 +209,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
                     //var toEmail = new EmailAddress(to.Replace(" ", ""));
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
-                        $"{workflowCase.CreatedAt:dd-MM-yyyy}; {workflowCase.IncidentType}; {workflowCase.IncidentPlace}",
+                        $"{workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
                         "", html);
                     // var bytes = await File.ReadAllBytesAsync(fileName);
                     // var file = Convert.ToBase64String(bytes);
@@ -206,6 +219,8 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         throw new Exception($"Status: {response.StatusCode}");
                     }
+
+                    await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName, workflowCase);
                 }
                 else if(message.CheckId == secondEformId)
                 {
@@ -265,6 +280,53 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         await workflowCase.Update(_dbContext);
                         await _sdkCore.CaseDelete(message.MicrotingId);
+
+                        var assembly = Assembly.GetExecutingAssembly();
+                    var assemblyName = assembly.GetName().Name;
+                    var stream = assembly.GetManifestResourceStream($"{assemblyName}.Resources.Email.html");
+                    string html;
+                    if (stream == null)
+                    {
+                        throw new InvalidOperationException("Resource not found");
+                    }
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        html = await reader.ReadToEndAsync();
+                    }
+
+                    html = html
+                        .Replace("{{link}}",
+                            $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
+                        .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
+                        .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
+                        .Replace("{{Type}}", workflowCase.IncidentType)
+                        .Replace("{{Location}}", workflowCase.IncidentPlace)
+                        .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
+                        .Replace("{{SolvedBy}}", workflowCase.SolvedBy);
+
+                    var sendGridKey =
+                        _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
+                    List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
+                    List<EmailAddress> emailAddresses = new List<EmailAddress>();
+                    foreach (string recepient in recepients)
+                    {
+                        emailAddresses.Add(new EmailAddress(recepient));
+                    }
+                    var client = new SendGridClient(sendGridKey.Value);
+                    string text = "";
+                    var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
+                    //var toEmail = new EmailAddress(to.Replace(" ", ""));
+                    var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
+                        $"{workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
+                        "", html);
+                    // var bytes = await File.ReadAllBytesAsync(fileName);
+                    // var file = Convert.ToBase64String(bytes);
+                    // msg.AddAttachment(Path.GetFileName(fileName), file);
+                    var response = await client.SendEmailAsync(msg);
+                    if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                    {
+                        throw new Exception($"Status: {response.StatusCode}");
+                    }
                     }
                 }
             }
