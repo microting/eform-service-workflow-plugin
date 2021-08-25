@@ -157,6 +157,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     workflowCase.CreatedByUserId = replyElement.SiteMicrotingUuid;
                     workflowCase.CreatedBySiteName = site.Name;
                     workflowCase.UpdatedByUserId = replyElement.SiteMicrotingUuid;
+                    workflowCase.Status = "Not initiated";
                     await workflowCase.Create(_dbContext);
 
                     foreach (var picturesOfTask in picturesOfTasks)
