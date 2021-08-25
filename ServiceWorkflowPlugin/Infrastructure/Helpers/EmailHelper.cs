@@ -127,7 +127,7 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
                 {"{incident_deadline}", workflowCase.Deadline?.ToString("dd-MM-yyyy")},
                 {"{incident_action_plan}", workflowCase.ActionPlan?.Replace("&", "&amp;")},
                 {"{incident_solved_by}", workflowCase.SolvedBy},
-                {"{incident_status}", workflowCase.Status}
+                {"{incident_status}", GetStatusTranslated(workflowCase.Status)}
             };
 
             foreach (PicturesOfTask picturesOfTask in await _dbContext.PicturesOfTasks.Where(x => x.WorkflowCaseId == workflowCase.Id).ToListAsync())
@@ -223,11 +223,30 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
             await SendFileAsync(
                 "no-reply@microting.com",
                 userName,
-                $"{workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
+                $"Kvittering: {workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
                 emailRecipient?.Email,
                 filePath,
                 null,
                 html);
+        }
+
+        private string GetStatusTranslated(string constant)
+        {
+            switch (constant)
+            {
+                case "Not initiated":
+                    return "Ikke igangsat";
+                case "Ongoing":
+                    return "Igangværende";
+                case "No status":
+                    return "Vælg status";
+                case "Closed":
+                    return "Afsluttet";
+                case "Canceled":
+                    return "Annulleret";
+                default:
+                    return "Ikke igangsat";
+            }
         }
     }
 }
