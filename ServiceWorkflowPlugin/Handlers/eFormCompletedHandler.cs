@@ -132,6 +132,7 @@ namespace ServiceWorkflowPlugin.Handlers
                         }
 
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
+                        workflowCase.NumberOfPhotos = 0;
 
                         if(fields[2].FieldValues.Count > 0)
                         {
@@ -195,7 +196,8 @@ namespace ServiceWorkflowPlugin.Handlers
                         .Replace("{{Type}}", workflowCase.IncidentType)
                         .Replace("{{Location}}", workflowCase.IncidentPlace)
                         .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
-                        .Replace("<p>Ansvarlig: {{SolvedBy}}</p>", "");
+                        .Replace("{{SolvedBy}}", workflowCase.SolvedBy)
+                        .Replace("{{ActionPlan}}", workflowCase.ActionPlan);
 
                     var sendGridKey =
                         _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
@@ -261,6 +263,7 @@ namespace ServiceWorkflowPlugin.Handlers
                                 if (fieldValue.UploadedDataObj != null)
                                 {
                                     picturesOfTasks.Add(fieldValue);
+                                    workflowCase.NumberOfPhotos += 1;
                                 }
                             }
                         }
@@ -303,7 +306,8 @@ namespace ServiceWorkflowPlugin.Handlers
                         .Replace("{{Type}}", workflowCase.IncidentType)
                         .Replace("{{Location}}", workflowCase.IncidentPlace)
                         .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
-                        .Replace("{{SolvedBy}}", workflowCase.SolvedBy);
+                        .Replace("{{SolvedBy}}", workflowCase.SolvedBy)
+                        .Replace("{{ActionPlan}}", workflowCase.ActionPlan);
 
                     var sendGridKey =
                         _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");

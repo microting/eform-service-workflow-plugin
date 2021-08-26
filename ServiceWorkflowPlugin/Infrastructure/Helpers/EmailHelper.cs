@@ -103,17 +103,9 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
                 .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
                 .Replace("{{Type}}", workflowCase.IncidentType)
                 .Replace("{{Location}}", workflowCase.IncidentPlace)
-                .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"));
-            if (string.IsNullOrEmpty(workflowCase.SolvedBy))
-            {
-                html = html
-                    .Replace("<p>Ansvarlig: {{SolvedBy}}</p>", "");
-            }
-            else
-            {
-                html = html
-                    .Replace("{{SolvedBy}}", workflowCase.SolvedBy);
-            }
+                .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
+                .Replace("<p>Ansvarlig: {{SolvedBy}}</p>", "")
+                .Replace("<p>Handlingsplan: {{ActionPlan}}</p>", "");
 
             List<KeyValuePair<string, List<string>>> pictures = new List<KeyValuePair<string, List<string>>>();
 
