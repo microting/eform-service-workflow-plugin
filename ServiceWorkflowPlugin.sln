@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{2FC522CA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceWorkflowPlugin.Integration.Test", "ServiceWorkflowPlugin.Integration.Test\ServiceWorkflowPlugin.Integration.Test.csproj", "{1FD59BC5-7199-41AC-968E-D94498F349F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microting.eFormWorkflowBase", "..\eform-workflow-base\Microting.eFormWorkflowBase\Microting.eFormWorkflowBase.csproj", "{58A18C76-1A2D-4BD9-8D9B-93F751F2F03A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,10 +23,6 @@ Global
 		{1FD59BC5-7199-41AC-968E-D94498F349F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FD59BC5-7199-41AC-968E-D94498F349F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FD59BC5-7199-41AC-968E-D94498F349F5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{58A18C76-1A2D-4BD9-8D9B-93F751F2F03A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58A18C76-1A2D-4BD9-8D9B-93F751F2F03A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58A18C76-1A2D-4BD9-8D9B-93F751F2F03A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58A18C76-1A2D-4BD9-8D9B-93F751F2F03A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
