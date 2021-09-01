@@ -24,6 +24,7 @@ SOFTWARE.
 
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.EformAngularFrontendBase.Infrastructure.Data.Factories;
+using Microting.eFormWorkflowBase.Helpers;
 
 namespace ServiceWorkflowPlugin
 {
@@ -166,14 +167,18 @@ namespace ServiceWorkflowPlugin
                         .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:NumberOfWorkers")?.Value;
                     _numberOfWorkers = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
 
-                    var emailHelper = new EmailHelper(_sdkCore, _dbContextHelper, _baseDbContext);
+                    var reportHelper = new WorkflowReportHelper(_sdkCore, _dbContextHelper);
 
                     _container = new WindsorContainer();
-                    _container.Register(Component.For<EmailHelper>().Instance(emailHelper));
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
                     _container.Register(Component.For<DbContextHelper>().Instance(_dbContextHelper));
                     _container.Register(Component.For<eFormCore.Core>().Instance(_sdkCore));
                     _container.Register(Component.For<BaseDbContext>().Instance(_baseDbContext));
+                    _container.Register(Component.For<WorkflowReportHelper>().Instance(reportHelper));
+
+                    var emailHelper = new EmailHelper(_sdkCore, _dbContextHelper, _baseDbContext, reportHelper);
+
+                    _container.Register(Component.For<EmailHelper>().Instance(emailHelper));
                     _container.Install(
                         new RebusHandlerInstaller()
                         , new RebusInstaller(connectionString, _maxParallelism, _numberOfWorkers, "admin", "password", rabbitmqHost)
