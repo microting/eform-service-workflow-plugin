@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.0.14](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.14) (2021-09-01)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.13...v1.0.14)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormWorkflowBase from 1.0.28 to 1.0.31 [\#77](https://github.com/microting/eform-service-workflow-plugin/issues/77)
+- Bump Microting.WorkflowBase from  to  [\#57](https://github.com/microting/eform-service-workflow-plugin/issues/57)
+- Bump Microting.eFormApi.BasePn from 3.0.34 to 3.0.22 [\#56](https://github.com/microting/eform-service-workflow-plugin/issues/56)
+- Bump Microting.eForm from 5.2.22 to 5.2.11 [\#55](https://github.com/microting/eform-service-workflow-plugin/issues/55)
+
+**Merged pull requests:**
+
+- Bump Microsoft.NET.Test.Sdk from 16.10.0 to 16.11.0 [\#67](https://github.com/microting/eform-service-workflow-plugin/pull/67) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v1.0.13](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.13) (2021-08-18)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.12...v1.0.13)
@@ -121,6 +136,7 @@
 **Merged pull requests:**
 
 - Bump Pomelo.EntityFrameworkCore.MySql from 5.0.0 to 5.0.1 [\#6](https://github.com/microting/eform-service-workflow-plugin/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump NUnit3TestAdapter from 3.17.0 to 4.0.0 [\#3](https://github.com/microting/eform-service-workflow-plugin/pull/3) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 ## [v1.0.1](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.1) (2021-07-08)
 
@@ -136,7 +152,6 @@
 
 **Merged pull requests:**
 
-- Bump NUnit3TestAdapter from 3.17.0 to 4.0.0 [\#3](https://github.com/microting/eform-service-workflow-plugin/pull/3) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Updates [\#2](https://github.com/microting/eform-service-workflow-plugin/pull/2) ([Gid733](https://github.com/Gid733))
 - Create service [\#1](https://github.com/microting/eform-service-workflow-plugin/pull/1) ([sanioooook](https://github.com/sanioooook))
 
