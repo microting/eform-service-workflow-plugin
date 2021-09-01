@@ -167,7 +167,7 @@ namespace ServiceWorkflowPlugin
                         .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:NumberOfWorkers")?.Value;
                     _numberOfWorkers = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
 
-                    var reportHelper = new WorkflowReportHelper(_sdkCore, _dbContextHelper);
+                    var reportHelper = new WorkflowReportHelper(_sdkCore, _dbContextHelper.GetDbContext());
 
                     _container = new WindsorContainer();
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
