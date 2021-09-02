@@ -84,7 +84,9 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
 
         public async Task GenerateReportAndSendEmail(int languageId, string userName, WorkflowCase workflowCase)
         {
-            var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName);
+            var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName
+                .Replace("Mobil", "")
+                .Replace("Tablet", ""));
             var filePath = await _workflowReportHelper.GenerateReportAnd(languageId, workflowCase);
             var assembly = Assembly.GetExecutingAssembly();
             var assemblyName = assembly.GetName().Name;
