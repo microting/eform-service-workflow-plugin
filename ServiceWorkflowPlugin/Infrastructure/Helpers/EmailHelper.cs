@@ -87,7 +87,7 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
             var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName
                 .Replace("Mobil", "")
                 .Replace("Tablet", ""));
-            var filePath = await _workflowReportHelper.GenerateReportAnd(languageId, workflowCase);
+            var filePath = await _workflowReportHelper.GenerateReportAnd(languageId, workflowCase, "pdf");
             var assembly = Assembly.GetExecutingAssembly();
             var assemblyName = assembly.GetName().Name;
 
