@@ -193,7 +193,7 @@ namespace ServiceWorkflowPlugin.Handlers
                         .Replace("{{link}}",
                             $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
                         .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
-                        .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
+                        .Replace("{{CreatedAt}}", workflowCase.DateOfIncident.ToString("dd-MM-yyyy"))
                         .Replace("{{Type}}", workflowCase.IncidentType)
                         .Replace("{{Location}}", workflowCase.IncidentPlace)
                         .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
@@ -213,7 +213,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
                     //var toEmail = new EmailAddress(to.Replace(" ", ""));
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
-                        $"Opfølgning: {workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
+                        $"Opfølgning: {workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
                         "", html);
                     // var bytes = await File.ReadAllBytesAsync(fileName);
                     // var file = Convert.ToBase64String(bytes);
@@ -303,7 +303,7 @@ namespace ServiceWorkflowPlugin.Handlers
                         .Replace("{{link}}",
                             $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
                         .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
-                        .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
+                        .Replace("{{CreatedAt}}", workflowCase.DateOfIncident.ToString("dd-MM-yyyy"))
                         .Replace("{{Type}}", workflowCase.IncidentType)
                         .Replace("{{Location}}", workflowCase.IncidentPlace)
                         .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
@@ -323,7 +323,7 @@ namespace ServiceWorkflowPlugin.Handlers
                     var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
                     //var toEmail = new EmailAddress(to.Replace(" ", ""));
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
-                        $"Opfølgning: {workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.CreatedAt:dd-MM-yyyy}",
+                        $"Opfølgning: {workflowCase.IncidentType};  {workflowCase.IncidentPlace}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
                         "", html);
                     // var bytes = await File.ReadAllBytesAsync(fileName);
                     // var file = Convert.ToBase64String(bytes);
