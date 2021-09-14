@@ -1,5 +1,25 @@
 # Changelog
 
+## [v1.0.23](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.23) (2021-09-14)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.22...v1.0.23)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormAngularFrontendBase from  to  [\#99](https://github.com/microting/eform-service-workflow-plugin/issues/99)
+- Bump Microting.eFormWorkflowBase from 1.0.38 to 1.0.40 [\#98](https://github.com/microting/eform-service-workflow-plugin/issues/98)
+- Bump Microting.eFormApi.BasePn from 3.0.45 to 3.0.47 [\#97](https://github.com/microting/eform-service-workflow-plugin/issues/97)
+- Bump Microting.eForm from 5.2.35 to 5.2.37 [\#96](https://github.com/microting/eform-service-workflow-plugin/issues/96)
+- Bump Microting.eFormWorkflowBase from 1.0.33 to 1.0.34 [\#84](https://github.com/microting/eform-service-workflow-plugin/issues/84)
+
+## [v1.0.22](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.22) (2021-09-14)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.21...v1.0.22)
+
+## [v1.0.21](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.21) (2021-09-09)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.20...v1.0.21)
+
 ## [v1.0.20](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.20) (2021-09-08)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.19...v1.0.20)
@@ -31,7 +51,6 @@
 **Implemented enhancements:**
 
 - Bump Microting.eFormAngularFrontendBase from  to  [\#85](https://github.com/microting/eform-service-workflow-plugin/issues/85)
-- Bump Microting.eFormWorkflowBase from 1.0.33 to 1.0.34 [\#84](https://github.com/microting/eform-service-workflow-plugin/issues/84)
 - Bump Microting.eFormApi.BasePn from 3.0.44 to 3.0.45 [\#83](https://github.com/microting/eform-service-workflow-plugin/issues/83)
 - Bump Microting.eForm from 5.2.33 to 5.2.35 [\#82](https://github.com/microting/eform-service-workflow-plugin/issues/82)
 
@@ -131,11 +150,14 @@
 - Bump Microting.eFormWorkflowBase from 1.0.14 to 1.0.15 [\#33](https://github.com/microting/eform-service-workflow-plugin/issues/33)
 - Bump Microting.eFormApi.BasePn from 3.0.31 to 3.0.33 [\#32](https://github.com/microting/eform-service-workflow-plugin/issues/32)
 - Bump Microting.eForm from 5.2.18 to 5.2.21 [\#31](https://github.com/microting/eform-service-workflow-plugin/issues/31)
-- Bump Microting.eFormWorkflowBase from 1.0.12 to 1.0.14 [\#29](https://github.com/microting/eform-service-workflow-plugin/issues/29)
 
 ## [v1.0.6](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.6) (2021-07-26)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.5...v1.0.6)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormWorkflowBase from 1.0.12 to 1.0.14 [\#29](https://github.com/microting/eform-service-workflow-plugin/issues/29)
 
 ## [v1.0.5](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.5) (2021-07-22)
 
