@@ -39,7 +39,6 @@
 **Implemented enhancements:**
 
 - Bump Microting.eFormAngularFrontendBase from  to  [\#85](https://github.com/microting/eform-service-workflow-plugin/issues/85)
-- Bump Microting.eFormWorkflowBase from 1.0.33 to 1.0.34 [\#84](https://github.com/microting/eform-service-workflow-plugin/issues/84)
 - Bump Microting.eFormApi.BasePn from 3.0.44 to 3.0.45 [\#83](https://github.com/microting/eform-service-workflow-plugin/issues/83)
 - Bump Microting.eForm from 5.2.33 to 5.2.35 [\#82](https://github.com/microting/eform-service-workflow-plugin/issues/82)
 
