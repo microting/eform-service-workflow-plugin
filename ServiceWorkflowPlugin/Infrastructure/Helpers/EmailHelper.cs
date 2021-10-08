@@ -105,7 +105,7 @@ namespace ServiceWorkflowPlugin.Infrastructure.Helpers
                 .Replace(
                     "<a href=\"{{link}}\">Link til sag</a>", "")
                 .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
-                .Replace("{{CreatedAt}}", workflowCase.CreatedAt.ToString("dd-MM-yyyy"))
+                .Replace("{{CreatedAt}}", workflowCase.DateOfIncident.ToString("dd-MM-yyyy"))
                 .Replace("{{Type}}", workflowCase.IncidentType)
                 .Replace("{{Location}}", workflowCase.IncidentPlace)
                 .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
