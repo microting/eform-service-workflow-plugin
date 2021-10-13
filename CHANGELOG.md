@@ -1,5 +1,24 @@
 # Changelog
 
+## [v1.0.28](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.28) (2021-10-13)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.27...v1.0.28)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormAngularFrontendBase from  to  [\#132](https://github.com/microting/eform-service-workflow-plugin/issues/132)
+- Bump Microting.eFormWorkflowBase from 1.0.54 to 1.0.55 [\#131](https://github.com/microting/eform-service-workflow-plugin/issues/131)
+- Bump Microting.eFormApi.BasePn from 3.0.58 to 3.0.59 [\#130](https://github.com/microting/eform-service-workflow-plugin/issues/130)
+- Bump Microting.eForm from 5.2.48 to 5.2.49 [\#129](https://github.com/microting/eform-service-workflow-plugin/issues/129)
+
+## [v1.0.27](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.27) (2021-10-12)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.26...v1.0.27)
+
+## [v1.0.26](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.26) (2021-10-08)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.25...v1.0.26)
+
 ## [v1.0.25](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.25) (2021-09-25)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.24...v1.0.25)
@@ -111,10 +130,6 @@
 
 - Bump Microting.eFormAngularFrontendBase from  to  [\#76](https://github.com/microting/eform-service-workflow-plugin/issues/76)
 
-**Merged pull requests:**
-
-- Bump SendGrid from 9.24.1 to 9.24.2 [\#62](https://github.com/microting/eform-service-workflow-plugin/pull/62) ([dependabot[bot]](https://github.com/apps/dependabot))
-
 ## [v1.0.12](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.12) (2021-08-18)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.11...v1.0.12)
@@ -172,6 +187,7 @@
 - Bump Microting.eFormWorkflowBase from 1.0.14 to 1.0.15 [\#33](https://github.com/microting/eform-service-workflow-plugin/issues/33)
 - Bump Microting.eFormApi.BasePn from 3.0.31 to 3.0.33 [\#32](https://github.com/microting/eform-service-workflow-plugin/issues/32)
 - Bump Microting.eForm from 5.2.18 to 5.2.21 [\#31](https://github.com/microting/eform-service-workflow-plugin/issues/31)
+- Bump Microting.eFormWorkflowBase from 1.0.11 to 1.0.12 [\#27](https://github.com/microting/eform-service-workflow-plugin/issues/27)
 
 ## [v1.0.6](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.6) (2021-07-26)
 
@@ -184,10 +200,6 @@
 ## [v1.0.5](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.5) (2021-07-22)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.4...v1.0.5)
-
-**Implemented enhancements:**
-
-- Bump Microting.eFormWorkflowBase from 1.0.11 to 1.0.12 [\#27](https://github.com/microting/eform-service-workflow-plugin/issues/27)
 
 **Merged pull requests:**
 
@@ -223,6 +235,7 @@
 
 **Merged pull requests:**
 
+- Bump SendGrid from 9.24.1 to 9.24.2 [\#62](https://github.com/microting/eform-service-workflow-plugin/pull/62) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump Pomelo.EntityFrameworkCore.MySql from 5.0.0 to 5.0.1 [\#6](https://github.com/microting/eform-service-workflow-plugin/pull/6) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump NUnit3TestAdapter from 3.17.0 to 4.0.0 [\#3](https://github.com/microting/eform-service-workflow-plugin/pull/3) ([dependabot[bot]](https://github.com/apps/dependabot))
 
