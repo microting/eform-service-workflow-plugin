@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.0.37](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.37) (2021-11-17)
+
+[Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.36...v1.0.37)
+
+**Implemented enhancements:**
+
+- Bump Microting.eFormAngularFrontendBase from  to  [\#173](https://github.com/microting/eform-service-workflow-plugin/issues/173)
+- Bump Microting.eFormWorkflowBase from 1.1.1 to 1.1.2 [\#172](https://github.com/microting/eform-service-workflow-plugin/issues/172)
+- Bump Microting.eFormApi.BasePn from 3.1.1 to 3.1.2 [\#171](https://github.com/microting/eform-service-workflow-plugin/issues/171)
+- Bump Microting.eForm from 5.3.2 to 5.3.4 [\#170](https://github.com/microting/eform-service-workflow-plugin/issues/170)
+
 ## [v1.0.36](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.36) (2021-11-16)
 
 [Full Changelog](https://github.com/microting/eform-service-workflow-plugin/compare/v1.0.35...v1.0.36)
@@ -9,6 +20,7 @@
 - Bump Microting.eFormAngularFrontendBase from  to  [\#169](https://github.com/microting/eform-service-workflow-plugin/issues/169)
 - Bump Microting.eFormWorkflowBase from 1.0.62 to 1.1.1 [\#168](https://github.com/microting/eform-service-workflow-plugin/issues/168)
 - Bump Microting.eFormApi.BasePn from 3.1.0 to 3.1.1 [\#167](https://github.com/microting/eform-service-workflow-plugin/issues/167)
+- Bump Microting.eForm from 5.3.0 to 5.3.2 [\#166](https://github.com/microting/eform-service-workflow-plugin/issues/166)
 
 ## [v1.0.35](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.35) (2021-11-14)
 
@@ -16,7 +28,6 @@
 
 **Implemented enhancements:**
 
-- Bump Microting.eForm from 5.3.0 to 5.3.2 [\#166](https://github.com/microting/eform-service-workflow-plugin/issues/166)
 - Bump Microting.eFormAngularFrontendBase from  to  [\#165](https://github.com/microting/eform-service-workflow-plugin/issues/165)
 - Bump Microting.eFormWorkflowBase from 1.0.61 to 1.0.62 [\#164](https://github.com/microting/eform-service-workflow-plugin/issues/164)
 - Bump Microting.eFormApi.BasePn from 3.0.64 to 3.1.0 [\#163](https://github.com/microting/eform-service-workflow-plugin/issues/163)
@@ -136,7 +147,6 @@
 
 **Implemented enhancements:**
 
-- Bump Microting.eFormAngularFrontendBase from  to  [\#95](https://github.com/microting/eform-service-workflow-plugin/issues/95)
 - Bump Microting.eFormWorkflowBase from 1.0.37 to 1.0.39 [\#94](https://github.com/microting/eform-service-workflow-plugin/issues/94)
 - Bump Microting.eFormApi.BasePn from 3.0.45 to 3.0.46 [\#93](https://github.com/microting/eform-service-workflow-plugin/issues/93)
 
@@ -158,6 +168,7 @@
 
 **Implemented enhancements:**
 
+- Bump Microting.eFormAngularFrontendBase from  to  [\#95](https://github.com/microting/eform-service-workflow-plugin/issues/95)
 - Bump Microting.eFormWorkflowBase from 1.0.35 to 1.0.36 [\#89](https://github.com/microting/eform-service-workflow-plugin/issues/89)
 
 ## [v1.0.18](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.18) (2021-09-07)
@@ -167,7 +178,6 @@
 **Implemented enhancements:**
 
 - Bump Microting.eFormWorkflowBase from 1.0.34 to 1.0.35 [\#87](https://github.com/microting/eform-service-workflow-plugin/issues/87)
-- Bump Microting.eFormWorkflowBase from 1.0.33 to 1.0.34 [\#84](https://github.com/microting/eform-service-workflow-plugin/issues/84)
 
 ## [v1.0.17](https://github.com/microting/eform-service-workflow-plugin/tree/v1.0.17) (2021-09-06)
 
@@ -176,6 +186,7 @@
 **Implemented enhancements:**
 
 - Bump Microting.eFormAngularFrontendBase from  to  [\#85](https://github.com/microting/eform-service-workflow-plugin/issues/85)
+- Bump Microting.eFormWorkflowBase from 1.0.33 to 1.0.34 [\#84](https://github.com/microting/eform-service-workflow-plugin/issues/84)
 - Bump Microting.eFormApi.BasePn from 3.0.44 to 3.0.45 [\#83](https://github.com/microting/eform-service-workflow-plugin/issues/83)
 - Bump Microting.eForm from 5.2.33 to 5.2.35 [\#82](https://github.com/microting/eform-service-workflow-plugin/issues/82)
 
