@@ -119,14 +119,14 @@ namespace ServiceWorkflowPlugin.Handlers
                             workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
                         }
 
-                        if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value))
+                        if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value) && fields[1]?.FieldValues[0]?.Value != "null")
                         {
                             workflowCase.IncidentTypeId = int.Parse(fields[1].FieldValues[0].Value);
                             workflowCase.IncidentType = fields[1].FieldValues[0].ValueReadable;
                         }
 
 
-                        if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
+                        if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value) && fields[2]?.FieldValues[0]?.Value != "null")
                         {
                             workflowCase.IncidentPlaceId = int.Parse(fields[2].FieldValues[0].Value);
                             workflowCase.IncidentPlace = fields[2].FieldValues[0].ValueReadable;
@@ -135,8 +135,8 @@ namespace ServiceWorkflowPlugin.Handlers
                         workflowCase.PhotosExist = fields[3].FieldValues.Any();
                         workflowCase.NumberOfPhotos = 0;
 
-                        if(fields[2].FieldValues.Count > 0)
-                        {
+                        // if(fields[2].FieldValues.Count > 0)
+                        // {
                             foreach(FieldValue fieldValue in fields[3].FieldValues)
                             {
                                 if (fieldValue.UploadedDataObj != null)
@@ -146,7 +146,7 @@ namespace ServiceWorkflowPlugin.Handlers
                                     workflowCase.NumberOfPhotos += 1;
                                 }
                             }
-                        }
+                        // }
 
                         if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
                         {
@@ -204,9 +204,12 @@ namespace ServiceWorkflowPlugin.Handlers
                         _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
                     List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
                     List<EmailAddress> emailAddresses = new List<EmailAddress>();
-                    foreach (string recepient in recepients)
+                    foreach (string recipient in recepients)
                     {
-                        emailAddresses.Add(new EmailAddress(recepient));
+                        if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
+                        {
+                            emailAddresses.Add(new EmailAddress(recipient));
+                        }
                     }
                     var client = new SendGridClient(sendGridKey.Value);
                     string text = "";
@@ -314,9 +317,12 @@ namespace ServiceWorkflowPlugin.Handlers
                         _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
                     List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
                     List<EmailAddress> emailAddresses = new List<EmailAddress>();
-                    foreach (string recepient in recepients)
+                    foreach (string recipient in recepients)
                     {
-                        emailAddresses.Add(new EmailAddress(recepient));
+                        if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
+                        {
+                            emailAddresses.Add(new EmailAddress(recipient));
+                        }
                     }
                     var client = new SendGridClient(sendGridKey.Value);
                     string text = "";
