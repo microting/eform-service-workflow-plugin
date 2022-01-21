@@ -65,30 +65,28 @@ namespace ServiceWorkflowPlugin.Handlers
         {
             Console.WriteLine("[INF] EFormCompletedHandler.Handle: called");
 
+            _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
+            _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
+            var firstEformIdValue = _dbContext.PluginConfigurationValues
+                .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:FirstEformId")?.Value;
+
+            var secondEformIdValue = _dbContext.PluginConfigurationValues
+                .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:SecondEformId")?.Value;
+
+            if (!int.TryParse(firstEformIdValue, out var firstEformId))
+            {
+                const string errorMessage = "[ERROR] First eform id not found in setting";
+                Console.WriteLine(errorMessage);
+            }
+
+            if (!int.TryParse(secondEformIdValue, out var secondEformId))
+            {
+                const string errorMessage = "[ERROR] Second eform id not found in setting";
+                Console.WriteLine(errorMessage);
+            }
+
             try
             {
-                _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
-                _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
-                var firstEformIdValue = _dbContext.PluginConfigurationValues
-                    .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:FirstEformId")?.Value;
-
-                var secondEformIdValue = _dbContext.PluginConfigurationValues
-                    .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:SecondEformId")?.Value;
-
-                if (!int.TryParse(firstEformIdValue, out var firstEformId))
-                {
-                    const string errorMessage = "[ERROR] First eform id not found in setting";
-                    Console.WriteLine(errorMessage);
-                    throw new Exception(errorMessage);
-                }
-
-                if (!int.TryParse(secondEformIdValue, out var secondEformId))
-                {
-                    const string errorMessage = "[ERROR] Second eform id not found in setting";
-                    Console.WriteLine(errorMessage);
-                    throw new Exception(errorMessage);
-                }
-
                 await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
                 var cls = await sdkDbContext.Cases.FirstOrDefaultAsync(x =>
