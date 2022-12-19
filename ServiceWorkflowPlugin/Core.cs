@@ -132,9 +132,6 @@ namespace ServiceWorkflowPlugin
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
                 var angularConnectionString = sdkConnectionString.Replace(dbNameSection, angularDbName);
                 _baseDbContext = new BaseDbContextFactory().CreateDbContext(new []{angularConnectionString});
-                //    {AngularConnectionString = angularConnectionString};
-
-                var rabbitmqHost = connectionString.Contains("frontend") ? $"frontend-{dbPrefix}-rabbitmq" : "localhost";
 
                 if (!_coreAvailable && !_coreStatChanging)
                 {
@@ -158,6 +155,10 @@ namespace ServiceWorkflowPlugin
                     _coreStatChanging = false;
 
                     StartSdkCoreSqlOnly(sdkConnectionString);
+                    Console.WriteLine($"Connection string: {sdkConnectionString}");
+
+                    var rabbitmqHost = _sdkCore.GetSdkSetting(Settings.rabbitMqHost).GetAwaiter().GetResult();
+                    Console.WriteLine($"rabbitmqHost: {rabbitmqHost}");
 
                     var temp = _dbContext.PluginConfigurationValues
                         .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:MaxParallelism")?.Value;
@@ -240,7 +241,7 @@ namespace ServiceWorkflowPlugin
         {
             _sdkCore = new eFormCore.Core();
 
-            _sdkCore.StartSqlOnly(sdkConnectionString);
+            _sdkCore.StartSqlOnly(sdkConnectionString).GetAwaiter().GetResult();
         }
     }
 }
