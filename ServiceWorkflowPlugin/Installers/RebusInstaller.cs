@@ -40,8 +40,9 @@ namespace ServiceWorkflowPlugin.Installers
         private readonly string _rabbitMqUser;
         private readonly string _rabbitMqPassword;
         private readonly string _rabbitMqHost;
+        private readonly string _customerNo;
 
-        public RebusInstaller(string connectionString, int maxParallelism, int numberOfWorkers, string rabbitMqUser, string rabbitMqPassword, string rabbitMqHost)
+        public RebusInstaller(string customerNo, string connectionString, int maxParallelism, int numberOfWorkers, string rabbitMqUser, string rabbitMqPassword, string rabbitMqHost)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -53,6 +54,7 @@ namespace ServiceWorkflowPlugin.Installers
             _rabbitMqUser = rabbitMqUser;
             _rabbitMqPassword = rabbitMqPassword;
             _rabbitMqHost = rabbitMqHost;
+            _customerNo = customerNo;
         }
 
         public void Install(IWindsorContainer container, IConfigurationStore store)
@@ -62,7 +64,7 @@ namespace ServiceWorkflowPlugin.Installers
             Console.WriteLine($"rabbitMqHost: {_rabbitMqHost}");
             Configure.With(new CastleWindsorContainerAdapter(container))
                 .Logging(l => l.ColoredConsole(LogLevel.Info))
-                .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", "eform-service-workflow-plugin"))
+                .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", $"{_customerNo}-eform-service-workflow-plugin"))
                 .Options(o =>
                 {
                     o.SetMaxParallelism(_maxParallelism);
