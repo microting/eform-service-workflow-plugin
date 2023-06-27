@@ -18,10 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceWorkflowPlugin.Infrastructure
+namespace ServiceWorkflowPlugin.Infrastructure;
+
+public class ServiceWorkflowSettings
 {
-    public class ServiceWorkflowSettings
-    {
-        public string AngularConnectionString { get; set; }
-    }
+    public string AngularConnectionString { get; set; }
 }

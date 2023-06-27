@@ -30,139 +30,248 @@ using Microting.eFormWorkflowBase.Helpers;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
-namespace ServiceWorkflowPlugin.Handlers
+namespace ServiceWorkflowPlugin.Handlers;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using eFormCore;
+using Infrastructure.Helpers;
+using Messages;
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure.Models;
+using Microting.eFormApi.BasePn.Infrastructure.Consts;
+using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
+using Rebus.Handlers;
+using Microting.eFormWorkflowBase.Infrastructure.Data;
+
+public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using eFormCore;
-    using Infrastructure.Helpers;
-    using Messages;
-    using Microsoft.EntityFrameworkCore;
-    using Microting.eForm.Infrastructure.Models;
-    using Microting.eFormApi.BasePn.Infrastructure.Consts;
-    using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
-    using Rebus.Handlers;
-    using Microting.eFormWorkflowBase.Infrastructure.Data;
+    private readonly Core _sdkCore;
+    private readonly WorkflowPnDbContext _dbContext;
+    private bool _s3Enabled;
+    private bool _swiftEnabled;
+    private readonly BaseDbContext _baseDbContext;
+    private readonly EmailHelper _emailHelper;
 
-    public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
+    public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext, EmailHelper emailHelper)
     {
-        private readonly Core _sdkCore;
-        private readonly WorkflowPnDbContext _dbContext;
-        private bool _s3Enabled;
-        private bool _swiftEnabled;
-        private readonly BaseDbContext _baseDbContext;
-        private readonly EmailHelper _emailHelper;
+        _sdkCore = sdkCore;
+        _dbContext = dbContextHelper.GetDbContext();
+        _baseDbContext = baseDbContext;
+        _emailHelper = emailHelper;
+    }
+    public async Task Handle(eFormCompleted message)
+    {
+        Console.WriteLine("[INF] EFormCompletedHandler.Handle: called");
 
-        public EFormCompletedHandler(Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext, EmailHelper emailHelper)
+        _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
+        _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
+        var firstEformIdValue = _dbContext.PluginConfigurationValues
+            .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:FirstEformId")?.Value;
+
+        var secondEformIdValue = _dbContext.PluginConfigurationValues
+            .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:SecondEformId")?.Value;
+
+        if (!int.TryParse(firstEformIdValue, out var firstEformId))
         {
-            _sdkCore = sdkCore;
-            _dbContext = dbContextHelper.GetDbContext();
-            _baseDbContext = baseDbContext;
-            _emailHelper = emailHelper;
+            const string errorMessage = "[ERROR] First eform id not found in setting";
+            Console.WriteLine(errorMessage);
         }
-        public async Task Handle(eFormCompleted message)
+
+        if (!int.TryParse(secondEformIdValue, out var secondEformId))
         {
-            Console.WriteLine("[INF] EFormCompletedHandler.Handle: called");
+            const string errorMessage = "[ERROR] Second eform id not found in setting";
+            Console.WriteLine(errorMessage);
+        }
 
-            _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
-            _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
-            var firstEformIdValue = _dbContext.PluginConfigurationValues
-                .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:FirstEformId")?.Value;
+        try
+        {
+            await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
-            var secondEformIdValue = _dbContext.PluginConfigurationValues
-                .SingleOrDefault(x => x.Name == "WorkflowBaseSettings:SecondEformId")?.Value;
+            var cls = await sdkDbContext.Cases.FirstOrDefaultAsync(x =>
+                x.MicrotingUid == message.MicrotingId);
 
-            if (!int.TryParse(firstEformIdValue, out var firstEformId))
+            if (cls.CheckListId == firstEformId)
             {
-                const string errorMessage = "[ERROR] First eform id not found in setting";
-                Console.WriteLine(errorMessage);
-            }
-
-            if (!int.TryParse(secondEformIdValue, out var secondEformId))
-            {
-                const string errorMessage = "[ERROR] Second eform id not found in setting";
-                Console.WriteLine(errorMessage);
-            }
-
-            try
-            {
-                await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-
-                var cls = await sdkDbContext.Cases.FirstOrDefaultAsync(x =>
-                    x.MicrotingUid == message.MicrotingId);
-
-                if (cls.CheckListId == firstEformId)
+                var workflowCase = new WorkflowCase
                 {
-                    var workflowCase = new WorkflowCase
+                    MicrotingId = message.MicrotingId,
+                    CheckMicrotingUid = message.CheckUId,
+                    CheckId = message.CheckId
+                };
+
+                var language = await sdkDbContext.Languages
+                    .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
+                var replyElement = await _sdkCore.CaseRead(message.MicrotingId, message.CheckUId, language);
+                //var doneBy = sdkDbContext.Workers
+                //    .Single(x => x.Id == replyElement.DoneById).full_name();
+                var checkListValue = replyElement.ElementList[0] as CheckListValue;
+                var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
+
+                var picturesOfTasks = new List<FieldValue>();
+                if (fields!.Any())
+                {
+                    if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
                     {
-                        MicrotingId = message.MicrotingId,
-                        CheckMicrotingUid = message.CheckUId,
-                        CheckId = message.CheckId
+                        workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
+                    }
+
+                    if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value) && fields[1]?.FieldValues[0]?.Value != "null")
+                    {
+                        workflowCase.IncidentTypeId = int.Parse(fields[1].FieldValues[0].Value);
+                        workflowCase.IncidentType = fields[1].FieldValues[0].ValueReadable;
+                    }
+
+
+                    if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value) && fields[2]?.FieldValues[0]?.Value != "null")
+                    {
+                        workflowCase.IncidentPlaceId = int.Parse(fields[2].FieldValues[0].Value);
+                        workflowCase.IncidentPlace = fields[2].FieldValues[0].ValueReadable;
+                    }
+
+                    workflowCase.PhotosExist = fields[3].FieldValues.Any();
+                    workflowCase.NumberOfPhotos = 0;
+
+                    // if(fields[2].FieldValues.Count > 0)
+                    // {
+                    foreach(FieldValue fieldValue in fields[3].FieldValues)
+                    {
+                        if (fieldValue.UploadedDataObj != null)
+                        {
+                            picturesOfTasks.Add(fieldValue);
+                            //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
+                            workflowCase.NumberOfPhotos += 1;
+                        }
+                    }
+                    // }
+
+                    if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
+                    {
+                        workflowCase.Description = fields[4].FieldValues[0].Value;
+                    }
+                }
+
+                Site site = await sdkDbContext.Sites
+                    .SingleOrDefaultAsync(x => x.MicrotingUid == replyElement.SiteMicrotingUuid);
+                workflowCase.CreatedByUserId = replyElement.SiteMicrotingUuid;
+                workflowCase.CreatedBySiteName = site.Name;
+                workflowCase.UpdatedByUserId = replyElement.SiteMicrotingUuid;
+                workflowCase.Status = "Not initiated";
+                await workflowCase.Create(_dbContext);
+
+                foreach (var picturesOfTask in picturesOfTasks)
+                {
+                    var pictureOfTask = new PicturesOfTask
+                    {
+                        FileName = $"{picturesOfTask.UploadedDataObj.Id}_700_{picturesOfTask.UploadedDataObj.Checksum}{picturesOfTask.UploadedDataObj.Extension}",
+                        WorkflowCaseId = workflowCase.Id,
+                        UploadedDataId = picturesOfTask.UploadedDataObj.Id,
+                        Longitude = picturesOfTask.Longitude,
+                        Latitude = picturesOfTask.Latitude
                     };
 
-                    var language = await sdkDbContext.Languages
-                        .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
-                    var replyElement = await _sdkCore.CaseRead(message.MicrotingId, message.CheckUId, language);
-                    //var doneBy = sdkDbContext.Workers
-                    //    .Single(x => x.Id == replyElement.DoneById).full_name();
-                    var checkListValue = replyElement.ElementList[0] as CheckListValue;
-                    var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
+                    await pictureOfTask.Create(_dbContext);
+                }
 
-                    var picturesOfTasks = new List<FieldValue>();
-                    if (fields!.Any())
+                var assembly = Assembly.GetExecutingAssembly();
+                var assemblyName = assembly.GetName().Name;
+                var stream = assembly.GetManifestResourceStream($"{assemblyName}.Resources.Email.html");
+                string html;
+                if (stream == null)
+                {
+                    throw new InvalidOperationException("Resource not found");
+                }
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    html = await reader.ReadToEndAsync();
+                }
+
+                html = html
+                    .Replace("{{link}}",
+                        $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
+                    .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
+                    .Replace("{{CreatedAt}}", workflowCase.DateOfIncident.ToString("dd-MM-yyyy"))
+                    .Replace("{{Type}}", workflowCase.IncidentType)
+                    .Replace("{{Location}}", workflowCase.IncidentPlace)
+                    .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
+                    .Replace("{{SolvedBy}}", workflowCase.SolvedBy)
+                    .Replace("{{ActionPlan}}", workflowCase.ActionPlan);
+
+                var sendGridKey =
+                    _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
+                List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
+                List<EmailAddress> emailAddresses = new List<EmailAddress>();
+                foreach (string recipient in recepients)
+                {
+                    if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
                     {
-                        if (!string.IsNullOrEmpty(fields[0]?.FieldValues[0]?.Value))
+                        emailAddresses.Add(new EmailAddress(recipient));
+                    }
+                }
+                var client = new SendGridClient(sendGridKey.Value);
+                var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
+                //var toEmail = new EmailAddress(to.Replace(" ", ""));
+                var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
+                    $"Opfølgning: {workflowCase.IncidentPlace}; {workflowCase.IncidentType}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
+                    "", html);
+                // var bytes = await File.ReadAllBytesAsync(fileName);
+                // var file = Convert.ToBase64String(bytes);
+                // msg.AddAttachment(Path.GetFileName(fileName), file);
+                var response = await client.SendEmailAsync(msg);
+                if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                {
+                    throw new Exception($"Status: {response.StatusCode}");
+                }
+
+                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName, workflowCase);
+            }
+            else if(message.CheckId == secondEformId)
+            {
+                var workflowCase = await _dbContext.WorkflowCases
+                    .Where(x => x.DeployedMicrotingUid == message.MicrotingId)
+                    .SingleOrDefaultAsync();
+
+                var language = await sdkDbContext.Languages
+                    .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
+                var replyElement = await _sdkCore.CaseRead(message.MicrotingId, message.CheckUId, language);
+                var checkListValue = replyElement.ElementList[0] as CheckListValue;
+                var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
+
+
+                var picturesOfTasks = new List<FieldValue>();
+                if (fields!.Any())
+                {
+                    if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
+                    {
+                        workflowCase.Description = fields[2].FieldValues[0].Value;
+                    }
+
+                    if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
+                    {
+                        workflowCase.Description = fields[4].FieldValues[0].Value;
+                    }
+
+                    if (!string.IsNullOrEmpty(fields[3]?.FieldValues[0]?.Value))
+                    {
+                        workflowCase.ActionPlan = fields[3].FieldValues[0].Value;
+                    }
+
+                    if(fields[4].FieldValues.Count > 0)
+                    {
+                        foreach(FieldValue fieldValue in fields[4].FieldValues)
                         {
-                            workflowCase.DateOfIncident = DateTime.Parse(fields[0].FieldValues[0].Value);
-                        }
-
-                        if (!string.IsNullOrEmpty(fields[1]?.FieldValues[0]?.Value) && fields[1]?.FieldValues[0]?.Value != "null")
-                        {
-                            workflowCase.IncidentTypeId = int.Parse(fields[1].FieldValues[0].Value);
-                            workflowCase.IncidentType = fields[1].FieldValues[0].ValueReadable;
-                        }
-
-
-                        if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value) && fields[2]?.FieldValues[0]?.Value != "null")
-                        {
-                            workflowCase.IncidentPlaceId = int.Parse(fields[2].FieldValues[0].Value);
-                            workflowCase.IncidentPlace = fields[2].FieldValues[0].ValueReadable;
-                        }
-
-                        workflowCase.PhotosExist = fields[3].FieldValues.Any();
-                        workflowCase.NumberOfPhotos = 0;
-
-                        // if(fields[2].FieldValues.Count > 0)
-                        // {
-                            foreach(FieldValue fieldValue in fields[3].FieldValues)
+                            if (fieldValue.UploadedDataObj != null)
                             {
-                                if (fieldValue.UploadedDataObj != null)
-                                {
-                                    picturesOfTasks.Add(fieldValue);
-                                    //picturesOfTasks.Add($"{fieldValue.UploadedDataObj.Id}_700_{fieldValue.UploadedDataObj.Checksum}{fieldValue.UploadedDataObj.Extension}");
-                                    workflowCase.NumberOfPhotos += 1;
-                                }
+                                picturesOfTasks.Add(fieldValue);
+                                workflowCase.NumberOfPhotos += 1;
                             }
-                        // }
-
-                        if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
-                        {
-                            workflowCase.Description = fields[4].FieldValues[0].Value;
                         }
                     }
 
-                    Site site = await sdkDbContext.Sites
-                        .SingleOrDefaultAsync(x => x.MicrotingUid == replyElement.SiteMicrotingUuid);
-                    workflowCase.CreatedByUserId = replyElement.SiteMicrotingUuid;
-                    workflowCase.CreatedBySiteName = site.Name;
-                    workflowCase.UpdatedByUserId = replyElement.SiteMicrotingUuid;
-                    workflowCase.Status = "Not initiated";
-                    await workflowCase.Create(_dbContext);
-
                     foreach (var picturesOfTask in picturesOfTasks)
                     {
-                        var pictureOfTask = new PicturesOfTask
+                        var pictureOfTask = new PicturesOfTaskDone
                         {
                             FileName = $"{picturesOfTask.UploadedDataObj.Id}_700_{picturesOfTask.UploadedDataObj.Checksum}{picturesOfTask.UploadedDataObj.Extension}",
                             WorkflowCaseId = workflowCase.Id,
@@ -173,6 +282,9 @@ namespace ServiceWorkflowPlugin.Handlers
 
                         await pictureOfTask.Create(_dbContext);
                     }
+
+                    await workflowCase.Update(_dbContext);
+                    await _sdkCore.CaseDelete(message.MicrotingId);
 
                     var assembly = Assembly.GetExecutingAssembly();
                     var assemblyName = assembly.GetName().Name;
@@ -223,125 +335,12 @@ namespace ServiceWorkflowPlugin.Handlers
                     {
                         throw new Exception($"Status: {response.StatusCode}");
                     }
-
-                    await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName, workflowCase);
-                }
-                else if(message.CheckId == secondEformId)
-                {
-                    var workflowCase = await _dbContext.WorkflowCases
-                        .Where(x => x.DeployedMicrotingUid == message.MicrotingId)
-                        .SingleOrDefaultAsync();
-
-                    var language = await sdkDbContext.Languages
-                        .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
-                    var replyElement = await _sdkCore.CaseRead(message.MicrotingId, message.CheckUId, language);
-                    var checkListValue = replyElement.ElementList[0] as CheckListValue;
-                    var fields = checkListValue?.DataItemList.Select(di => di as Field).ToList();
-
-
-                    var picturesOfTasks = new List<FieldValue>();
-                    if (fields!.Any())
-                    {
-                        if (!string.IsNullOrEmpty(fields[2]?.FieldValues[0]?.Value))
-                        {
-                            workflowCase.Description = fields[2].FieldValues[0].Value;
-                        }
-
-                        if (!string.IsNullOrEmpty(fields[4]?.FieldValues[0]?.Value))
-                        {
-                            workflowCase.Description = fields[4].FieldValues[0].Value;
-                        }
-
-                        if (!string.IsNullOrEmpty(fields[3]?.FieldValues[0]?.Value))
-                        {
-                            workflowCase.ActionPlan = fields[3].FieldValues[0].Value;
-                        }
-
-                        if(fields[4].FieldValues.Count > 0)
-                        {
-                            foreach(FieldValue fieldValue in fields[4].FieldValues)
-                            {
-                                if (fieldValue.UploadedDataObj != null)
-                                {
-                                    picturesOfTasks.Add(fieldValue);
-                                    workflowCase.NumberOfPhotos += 1;
-                                }
-                            }
-                        }
-
-                        foreach (var picturesOfTask in picturesOfTasks)
-                        {
-                            var pictureOfTask = new PicturesOfTaskDone
-                            {
-                                FileName = $"{picturesOfTask.UploadedDataObj.Id}_700_{picturesOfTask.UploadedDataObj.Checksum}{picturesOfTask.UploadedDataObj.Extension}",
-                                WorkflowCaseId = workflowCase.Id,
-                                UploadedDataId = picturesOfTask.UploadedDataObj.Id,
-                                Longitude = picturesOfTask.Longitude,
-                                Latitude = picturesOfTask.Latitude
-                            };
-
-                            await pictureOfTask.Create(_dbContext);
-                        }
-
-                        await workflowCase.Update(_dbContext);
-                        await _sdkCore.CaseDelete(message.MicrotingId);
-
-                        var assembly = Assembly.GetExecutingAssembly();
-                    var assemblyName = assembly.GetName().Name;
-                    var stream = assembly.GetManifestResourceStream($"{assemblyName}.Resources.Email.html");
-                    string html;
-                    if (stream == null)
-                    {
-                        throw new InvalidOperationException("Resource not found");
-                    }
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        html = await reader.ReadToEndAsync();
-                    }
-
-                    html = html
-                        .Replace("{{link}}",
-                            $"{await _sdkCore.GetSdkSetting(Settings.httpServerAddress)}/plugins/workflow-pn/edit-workflow-case/{workflowCase.Id}")
-                        .Replace("{{CreatedBy}}", workflowCase.CreatedBySiteName)
-                        .Replace("{{CreatedAt}}", workflowCase.DateOfIncident.ToString("dd-MM-yyyy"))
-                        .Replace("{{Type}}", workflowCase.IncidentType)
-                        .Replace("{{Location}}", workflowCase.IncidentPlace)
-                        .Replace("{{Description}}", workflowCase.Description.Replace("&", "&amp;"))
-                        .Replace("{{SolvedBy}}", workflowCase.SolvedBy)
-                        .Replace("{{ActionPlan}}", workflowCase.ActionPlan);
-
-                    var sendGridKey =
-                        _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
-                    List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
-                    List<EmailAddress> emailAddresses = new List<EmailAddress>();
-                    foreach (string recipient in recepients)
-                    {
-                        if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
-                        {
-                            emailAddresses.Add(new EmailAddress(recipient));
-                        }
-                    }
-                    var client = new SendGridClient(sendGridKey.Value);
-                    var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
-                    //var toEmail = new EmailAddress(to.Replace(" ", ""));
-                    var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
-                        $"Opfølgning: {workflowCase.IncidentPlace}; {workflowCase.IncidentType}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
-                        "", html);
-                    // var bytes = await File.ReadAllBytesAsync(fileName);
-                    // var file = Convert.ToBase64String(bytes);
-                    // msg.AddAttachment(Path.GetFileName(fileName), file);
-                    var response = await client.SendEmailAsync(msg);
-                    if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
-                    {
-                        throw new Exception($"Status: {response.StatusCode}");
-                    }
-                    }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERR] ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERR] ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
         }
     }
 }

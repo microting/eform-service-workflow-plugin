@@ -29,48 +29,47 @@ using Microting.eFormWorkflowBase.Helpers;
 using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
 using Microting.eFormWorkflowBase.Messages;
 
-namespace ServiceWorkflowPlugin.Handlers
+namespace ServiceWorkflowPlugin.Handlers;
+
+using System.Threading.Tasks;
+using Infrastructure.Helpers;
+using Microting.eForm.Infrastructure.Data.Entities;
+using Microting.eFormWorkflowBase.Infrastructure.Data;
+using Rebus.Handlers;
+
+public class EFormEmailHandler : IHandleMessages<QueueEformEmail>
 {
-    using System.Threading.Tasks;
-    using Infrastructure.Helpers;
-    using Microting.eForm.Infrastructure.Data.Entities;
-    using Microting.eFormWorkflowBase.Infrastructure.Data;
-    using Rebus.Handlers;
+    private readonly eFormCore.Core _sdkCore;
+    private readonly WorkflowPnDbContext _dbContext;
+    private readonly BaseDbContext _baseDbContext;
+    private readonly EmailHelper _emailHelper;
 
-    public class EFormEmailHandler : IHandleMessages<QueueEformEmail>
+    public EFormEmailHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext, EmailHelper emailHelper)
     {
-        private readonly eFormCore.Core _sdkCore;
-        private readonly WorkflowPnDbContext _dbContext;
-        private readonly BaseDbContext _baseDbContext;
-        private readonly EmailHelper _emailHelper;
+        _dbContext = dbContextHelper.GetDbContext();
+        _sdkCore = sdkCore;
+        _baseDbContext = baseDbContext;
+        _emailHelper = emailHelper;
+    }
 
-        public EFormEmailHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, BaseDbContext baseDbContext, EmailHelper emailHelper)
+    public async Task Handle(QueueEformEmail message)
+    {
+        WorkflowCase workflowCase = await _dbContext.WorkflowCases.SingleOrDefaultAsync(x => x.Id == message.CaseId);
+        await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+        Microting.eForm.Infrastructure.Data.Entities.Case _case = await
+            sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == workflowCase.CheckMicrotingUid);
+        Site createdBySite = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.Id == _case.SiteId);
+
+        await _emailHelper.GenerateReportAndSendEmail(createdBySite.LanguageId, createdBySite.Name, workflowCase);
+
+        if (!string.IsNullOrEmpty(workflowCase.SolvedBy))
         {
-            _dbContext = dbContextHelper.GetDbContext();
-            _sdkCore = sdkCore;
-            _baseDbContext = baseDbContext;
-            _emailHelper = emailHelper;
-        }
+            Site site = await sdkDbContext.Sites.SingleOrDefaultAsync(x =>
+                x.Name == workflowCase.SolvedBy);
 
-        public async Task Handle(QueueEformEmail message)
-        {
-            WorkflowCase workflowCase = await _dbContext.WorkflowCases.SingleOrDefaultAsync(x => x.Id == message.CaseId);
-            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            Microting.eForm.Infrastructure.Data.Entities.Case _case = await
-                sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == workflowCase.CheckMicrotingUid);
-            Site createdBySite = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.Id == _case.SiteId);
-
-            await _emailHelper.GenerateReportAndSendEmail(createdBySite.LanguageId, createdBySite.Name, workflowCase);
-
-            if (!string.IsNullOrEmpty(workflowCase.SolvedBy))
+            if (workflowCase.SolvedBy != createdBySite.Name)
             {
-                Site site = await sdkDbContext.Sites.SingleOrDefaultAsync(x =>
-                    x.Name == workflowCase.SolvedBy);
-
-                if (workflowCase.SolvedBy != createdBySite.Name)
-                {
-                    await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, site.Name, workflowCase);
-                }
+                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, site.Name, workflowCase);
             }
         }
     }

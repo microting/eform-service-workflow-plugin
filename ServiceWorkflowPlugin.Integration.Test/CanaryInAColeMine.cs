@@ -22,17 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceWorkflowPlugin.Integration.Test
-{
-    using NUnit.Framework;
+namespace ServiceWorkflowPlugin.Integration.Test;
 
-    [TestFixture]
-    public class CanaryInAColeMine
+using NUnit.Framework;
+
+[TestFixture]
+public class CanaryInAColeMine
+{
+    [Test]
+    public void CanPeep()
     {
-        [Test]
-        public void CanPeep()
-        {
-            Assert.True(true);
-        }
+        Assert.True(true);
     }
 }

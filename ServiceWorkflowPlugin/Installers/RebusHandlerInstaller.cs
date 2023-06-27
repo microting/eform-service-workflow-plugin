@@ -25,21 +25,20 @@ SOFTWARE.
 
 using Microting.eFormWorkflowBase.Messages;
 
-namespace ServiceWorkflowPlugin.Installers
-{
-    using Castle.MicroKernel.Registration;
-    using Castle.MicroKernel.SubSystems.Configuration;
-    using Castle.Windsor;
-    using Handlers;
-    using Messages;
-    using Rebus.Handlers;
+namespace ServiceWorkflowPlugin.Installers;
 
-    public class RebusHandlerInstaller : IWindsorInstaller
+using Castle.MicroKernel.Registration;
+using Castle.MicroKernel.SubSystems.Configuration;
+using Castle.Windsor;
+using Handlers;
+using Messages;
+using Rebus.Handlers;
+
+public class RebusHandlerInstaller : IWindsorInstaller
+{
+    public void Install(IWindsorContainer container, IConfigurationStore store)
     {
-        public void Install(IWindsorContainer container, IConfigurationStore store)
-        {
-            container.Register(Component.For<IHandleMessages<QueueEformEmail>>().ImplementedBy<EFormEmailHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
-        }
+        container.Register(Component.For<IHandleMessages<QueueEformEmail>>().ImplementedBy<EFormEmailHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
     }
 }
