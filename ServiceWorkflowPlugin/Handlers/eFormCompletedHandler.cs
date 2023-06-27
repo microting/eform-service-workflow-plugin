@@ -210,7 +210,6 @@ namespace ServiceWorkflowPlugin.Handlers
                         }
                     }
                     var client = new SendGridClient(sendGridKey.Value);
-                    string text = "";
                     var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
                     //var toEmail = new EmailAddress(to.Replace(" ", ""));
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
@@ -323,7 +322,6 @@ namespace ServiceWorkflowPlugin.Handlers
                         }
                     }
                     var client = new SendGridClient(sendGridKey.Value);
-                    string text = "";
                     var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
                     //var toEmail = new EmailAddress(to.Replace(" ", ""));
                     var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,

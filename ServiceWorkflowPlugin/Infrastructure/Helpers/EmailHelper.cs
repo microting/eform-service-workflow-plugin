@@ -1,34 +1,16 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using Dapper;
-using Microting.eForm.Dto;
-using Microting.eForm.Infrastructure;
-using Microting.eForm.Infrastructure.Constants;
-using Microting.eForm.Infrastructure.Data.Entities;
-using Microting.eFormApi.BasePn.Infrastructure.Database.Entities;
-using Microting.eFormApi.BasePn.Infrastructure.Database.Entities.Malling;
 using Microting.eFormWorkflowBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
-using MySqlConnector;
-using Rebus.Handlers;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using System.Collections.Generic;
-using Amazon.S3.Model;
-using ImageMagick;
 using Microsoft.EntityFrameworkCore;
-using Microting.eForm.Helpers;
-using Microting.eForm.Infrastructure;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Helpers;
-using Microting.eFormWorkflowBase.Infrastructure.Data.Entities;
-using Microting.eFormWorkflowBase.Messages;
 
 namespace ServiceWorkflowPlugin.Infrastructure.Helpers
 {
