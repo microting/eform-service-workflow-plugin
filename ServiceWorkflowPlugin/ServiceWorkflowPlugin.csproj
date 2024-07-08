@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="8.0.0" />
     <PackageReference Include="Microting.eForm" Version="8.0.35" />
     <PackageReference Include="Microting.EformAngularFrontendBase" Version="8.0.32" />
-    <PackageReference Include="Microting.eFormWorkflowBase" Version="8.0.25" />
+    <PackageReference Include="Microting.eFormWorkflowBase" Version="8.0.26" />
     <PackageReference Include="Microting.WindowsService.BasePn" Version="2.0.0" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="System.ComponentModel.Composition" Version="8.0.0" />
