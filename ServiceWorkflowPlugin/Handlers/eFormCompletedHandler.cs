@@ -224,7 +224,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                     throw new Exception($"Status: {response.StatusCode}");
                 }
 
-                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName, workflowCase);
+                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName.Replace(" ", ""), workflowCase);
             }
             else if(message.CheckId == secondEformId)
             {

@@ -66,7 +66,7 @@ public class EmailHelper
 
     public async Task GenerateReportAndSendEmail(int languageId, string userName, WorkflowCase workflowCase)
     {
-        var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name == userName
+        var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name.Replace(" ", "") == userName
             .Replace("Mobil", "")
             .Replace("Tablet", ""));
         var filePath = await _workflowReportHelper.GenerateReportAnd(languageId, workflowCase, "pdf");

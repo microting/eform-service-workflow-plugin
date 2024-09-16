@@ -69,7 +69,7 @@ public class EFormEmailHandler : IHandleMessages<QueueEformEmail>
 
             if (workflowCase.SolvedBy != createdBySite.Name)
             {
-                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, site.Name, workflowCase);
+                await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, site.Name.Replace(" ", ""), workflowCase);
             }
         }
     }
