@@ -204,7 +204,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                 List<EmailAddress> emailAddresses = new List<EmailAddress>();
                 foreach (string recipient in recepients)
                 {
-                    if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
+                    if (!recipient.Contains("admin.com"))
                     {
                         emailAddresses.Add(new EmailAddress(recipient));
                     }
@@ -316,7 +316,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                     List<EmailAddress> emailAddresses = new List<EmailAddress>();
                     foreach (string recipient in recepients)
                     {
-                        if (!recipient.Contains("microting") && !recipient.Contains("admin.com"))
+                        if (!recipient.Contains("admin.com"))
                         {
                             emailAddresses.Add(new EmailAddress(recipient));
                         }
