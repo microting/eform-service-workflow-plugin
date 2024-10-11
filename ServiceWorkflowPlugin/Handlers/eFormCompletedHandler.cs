@@ -24,6 +24,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Microting.eForm.Dto;
+using Microting.eForm.Infrastructure.Constants;
 using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Helpers;
@@ -200,7 +201,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 
                 var sendGridKey =
                     _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
-                List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
+                List<string> recepients = await _baseDbContext.EmailRecipients.Where(x => x.WorkflowState != Constants.WorkflowStates.Removed).Select(x => x.Email).ToListAsync();
                 List<EmailAddress> emailAddresses = new List<EmailAddress>();
                 foreach (string recipient in recepients)
                 {
