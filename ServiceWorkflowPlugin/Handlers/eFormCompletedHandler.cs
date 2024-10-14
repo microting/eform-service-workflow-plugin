@@ -201,9 +201,22 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 
                 var sendGridKey =
                     _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
-                List<string> recepients = await _baseDbContext.EmailRecipients.Where(x => x.WorkflowState != Constants.WorkflowStates.Removed).Select(x => x.Email).ToListAsync();
+                List<string> recipients = await _baseDbContext.EmailRecipients
+                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                    .Join(_baseDbContext.EmailTagRecipients,
+                          recipient => recipient.Id,
+                          tagRecipient => tagRecipient.EmailRecipientId,
+                          (recipient, tagRecipient) => new { recipient, tagRecipient })
+                    .Join(_baseDbContext.EmailTags,
+                          combined => combined.tagRecipient.EmailTagId,
+                          tag => tag.Id,
+                          (combined, tag) => new { combined.recipient, tag })
+                    .Where(x => x.tag.Name == "Administrationen")
+                    .Select(x => x.recipient.Email)
+                    .ToListAsync();
+
                 List<EmailAddress> emailAddresses = new List<EmailAddress>();
-                foreach (string recipient in recepients)
+                foreach (string recipient in recipients)
                 {
                     if (!recipient.Contains("admin.com"))
                     {
