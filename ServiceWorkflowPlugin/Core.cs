@@ -96,6 +96,7 @@ public class Core : ISdkEventHandler
             if (trigger.MicrotingUId != null && trigger.CheckUId != null)
             {
                 _bus.SendLocal(new eFormCompleted(
+                    trigger.CaseId,
                     (int)trigger.MicrotingUId,
                     trigger.CheckListId,
                     (int)trigger.CheckUId,

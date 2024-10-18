@@ -20,21 +20,14 @@ SOFTWARE.
 
 namespace ServiceWorkflowPlugin.Messages;
 
-public class eFormCompleted
+public class eFormCompleted(int? caseId, int microtingUId, int checkId, int checkUId, int siteUId)
 {
-    public int MicrotingId { get; protected set; }
+    public int? CaseId { get; protected set; } = caseId;
+    public int MicrotingUId { get; protected set; } = microtingUId;
 
-    public int CheckId { get; protected set; }
+    public int CheckId { get; protected set; } = checkId;
 
-    public int CheckUId { get; protected set; }
+    public int CheckUId { get; protected set; } = checkUId;
 
-    public int SiteId { get; protected set; }
-
-    public eFormCompleted(int microtingId, int checkId, int checkUId, int siteId)
-    {
-        MicrotingId = microtingId;
-        CheckId = checkId;
-        CheckUId = checkUId;
-        SiteId = siteId;
-    }
+    public int SiteUId { get; protected set; } = siteUId;
 }
