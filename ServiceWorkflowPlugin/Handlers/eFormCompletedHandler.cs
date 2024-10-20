@@ -30,6 +30,7 @@ using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Helpers;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using Sentry;
 
 namespace ServiceWorkflowPlugin.Handlers;
 
@@ -93,7 +94,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                              .AsNoTracking()
                              .FirstOrDefaultAsync(x => x.Id == message.CaseId) ??
                          await sdkDbContext.Cases
-                             .FirstOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
+                             .FirstOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckUId);
 
 
             if (dbCase.CheckListId == firstEformId)
@@ -101,23 +102,42 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                 var workflowCase = new WorkflowCase
                 {
                     MicrotingId = message.MicrotingUId,
-                    CheckMicrotingUid = message.CheckId,
+                    CheckMicrotingUid = message.CheckUId,
                     CheckId = message.CheckId
                 };
 
-                var eformIdForNewTasks = await sdkDbContext.CheckLists
-                    .Where(x => x.OriginalId == "5769")
-                    .Where(x => x.ParentId == null)
-                    .Select(x => x.Id)
-                    .FirstOrDefaultAsync();
+                // var eformIdForNewTasks = await sdkDbContext.CheckLists
+                //     .Where(x => x.OriginalId == "5769")
+                //     .Where(x => x.ParentId == null)
+                //     .Select(x => x.Id)
+                //     .FirstOrDefaultAsync();
 
                 var subCheckList = await sdkDbContext.CheckLists
-                    .FirstOrDefaultAsync(x => x.ParentId == eformIdForNewTasks)
+                    .FirstOrDefaultAsync(x => x.ParentId == firstEformId)
                     .ConfigureAwait(false);
 
                 var dateOfIncidentField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371265");
+
+                if (dateOfIncidentField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Dato for hændelse" and the field.checkListId set to the subCheckList.Id and set the dateOfIncidentField to the first field
+                    dateOfIncidentField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Dato for hændelse")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371265"
+                    dateOfIncidentField.OriginalId = "371265";
+                    await dateOfIncidentField.Update(sdkDbContext);
+                }
+
                 var dateOfIncidentFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == dateOfIncidentField.Id && x.CaseId == dbCase.Id);
@@ -128,8 +148,28 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                     .Select(x => x.Id)
                     .FirstOrDefaultAsync();
                 var incidentTypeField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371261");
+
+                if (incidentTypeField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Hændelsestype" and the field.checkListId set to the subCheckList.Id and set the incidentTypeField to the first field
+                    incidentTypeField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Type")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371261"
+                    incidentTypeField.OriginalId = "371261";
+                    await incidentTypeField.Update(sdkDbContext);
+                }
+
+
                 var incidentTypeFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == incidentTypeField.Id && x.CaseId == dbCase.Id);
@@ -143,8 +183,28 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                     .Select(x => x.Id)
                     .FirstOrDefaultAsync();
                 var locationField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371262");
+
+                if (locationField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Lokation" and the field.checkListId set to the subCheckList.Id and set the locationField to the first field
+                    locationField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Sted")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371262"
+                    locationField.OriginalId = "371262";
+                    await locationField.Update(sdkDbContext);
+                }
+
+
                 var locationFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == locationField.Id && x.CaseId == dbCase.Id);
@@ -154,16 +214,55 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                 workflowCase.IncidentPlace = location.Name;
 
                 var descriptionField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371264");
+
+                if (descriptionField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Beskrivelse" and the field.checkListId set to the subCheckList.Id and set the descriptionField to the first field
+                    descriptionField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Beskrivelse")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371264"
+                    descriptionField.OriginalId = "371264";
+                    await descriptionField.Update(sdkDbContext);
+                }
+
+
                 var descriptionFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == descriptionField.Id && x.CaseId == dbCase.Id);
                 workflowCase.Description = descriptionFieldValue.Value;
 
                 var pictureField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371263");
+
+                if (pictureField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Billeder" and the field.checkListId set to the subCheckList.Id and set the pictureField to the first field
+                    pictureField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Foto")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371263"
+                    pictureField.OriginalId = "371263";
+                    await pictureField.Update(sdkDbContext);
+                }
+
                 var pictureFieldValues = await sdkDbContext.FieldValues
                     .Where(x => x.FieldId == pictureField.Id && x.CaseId == dbCase.Id).ToListAsync();
 
@@ -250,17 +349,16 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                 }
                 var client = new SendGridClient(sendGridKey.Value);
                 var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
-                //var toEmail = new EmailAddress(to.Replace(" ", ""));
-                var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
-                    $"Opfølgning: {workflowCase.IncidentPlace}; {workflowCase.IncidentType}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
-                    "", html);
-                // var bytes = await File.ReadAllBytesAsync(fileName);
-                // var file = Convert.ToBase64String(bytes);
-                // msg.AddAttachment(Path.GetFileName(fileName), file);
-                var response = await client.SendEmailAsync(msg);
-                if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                if (emailAddresses.Count != 0)
                 {
-                    throw new Exception($"Status: {response.StatusCode}");
+                    var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
+                        $"Opfølgning: {workflowCase.IncidentPlace}; {workflowCase.IncidentType}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
+                        "", html);
+                    var response = await client.SendEmailAsync(msg);
+                    if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                    {
+                        throw new Exception($"Status: {response.StatusCode}");
+                    }
                 }
 
                 await _emailHelper.GenerateReportAndSendEmail(site.LanguageId, workflowCase.CreatedBySiteName.Replace(" ", ""), workflowCase);
@@ -271,40 +369,86 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
                     .Where(x => x.DeployedMicrotingUid == message.MicrotingUId)
                     .SingleOrDefaultAsync();
 
-                var language = await sdkDbContext.Languages
-                    .SingleAsync(x => x.LanguageCode == LocaleNames.Danish);
-
-                var eformIdForOngoingTasks = await sdkDbContext.CheckLists
-                    .Where(x => x.OriginalId == "7680")
-                    .Where(x => x.ParentId == null)
-                    .Select(x => x.Id)
-                    .FirstOrDefaultAsync();
-
                 var subCheckList = await sdkDbContext.CheckLists
-                    .FirstOrDefaultAsync(x => x.ParentId == eformIdForOngoingTasks)
+                    .FirstOrDefaultAsync(x => x.ParentId == secondEformId)
                     .ConfigureAwait(false);
 
                 var picturesOfTasks = new List<Microting.eForm.Infrastructure.Data.Entities.FieldValue>();
 
                 var descriptionField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371271");
+
+                if (descriptionField == null)
+                {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Beskrivelse" and the field.checkListId set to the subCheckList.Id and set the descriptionField to the first field
+                    descriptionField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Beskrivelse")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371271"
+                    descriptionField.OriginalId = "371271";
+                    await descriptionField.Update(sdkDbContext);
+                }
+
                 var descriptionFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == descriptionField.Id && x.CaseId == dbCase.Id);
                 workflowCase.Description = descriptionFieldValue.Value;
 
                 var actionPlanField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
-                        x.CheckListId == subCheckList.Id && x.OriginalId == "371271");
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
+                        x.CheckListId == subCheckList.Id && x.OriginalId == "371272");
+
+                if (actionPlanField == null) {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Beskrivelse" and the field.checkListId set to the subCheckList.Id and set the descriptionField to the first field
+                    actionPlanField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Handlingsplan")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371271"
+                    actionPlanField.OriginalId = "371272";
+                    await actionPlanField.Update(sdkDbContext);
+                }
+
+
                 var actionPlanFieldValue =
                     await sdkDbContext.FieldValues.FirstAsync(
                         x => x.FieldId == actionPlanField.Id && x.CaseId == dbCase.Id);
                 workflowCase.ActionPlan = actionPlanFieldValue.Value;
 
                 var pictureField =
-                    await sdkDbContext.Fields.FirstAsync(x =>
+                    await sdkDbContext.Fields.FirstOrDefaultAsync(x =>
                         x.CheckListId == subCheckList.Id && x.OriginalId == "371270");
+
+                if (pictureField == null) {
+                    // join the fields and fieldTranslations with the fieldTranslations.text set to "Billeder" and the field.checkListId set to the subCheckList.Id and set the pictureField to the first field
+                    pictureField = await sdkDbContext.Fields
+                        .Join(sdkDbContext.FieldTranslations,
+                            field => field.Id,
+                            fieldTranslation => fieldTranslation.FieldId,
+                            (field, fieldTranslation) => new { field, fieldTranslation })
+                        .Where(x => x.fieldTranslation.Text == "Billede af udført opgave")
+                        .Where(x => x.field.CheckListId == subCheckList.Id)
+                        .Select(x => x.field)
+                        .FirstOrDefaultAsync();
+
+                    // then update the originalId of the field to "371270"
+                    pictureField.OriginalId = "371270";
+                    await pictureField.Update(sdkDbContext);
+                }
                 var pictureFieldValues = await sdkDbContext.FieldValues
                     .Where(x => x.FieldId == pictureField.Id && x.CaseId == dbCase.Id).ToListAsync();
 
@@ -374,13 +518,9 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 
                 var client = new SendGridClient(sendGridKey.Value);
                 var fromEmailAddress = new EmailAddress("no-reply@microting.com", "no-reply@microting.com");
-                //var toEmail = new EmailAddress(to.Replace(" ", ""));
                 var msg = MailHelper.CreateSingleEmailToMultipleRecipients(fromEmailAddress, emailAddresses,
                     $"Opfølgning: {workflowCase.IncidentPlace}; {workflowCase.IncidentType}; {workflowCase.DateOfIncident:dd-MM-yyyy}",
                     "", html);
-                // var bytes = await File.ReadAllBytesAsync(fileName);
-                // var file = Convert.ToBase64String(bytes);
-                // msg.AddAttachment(Path.GetFileName(fileName), file);
                 var response = await client.SendEmailAsync(msg);
                 if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
                 {
@@ -391,6 +531,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
         }
         catch (Exception ex)
         {
+            SentrySdk.CaptureException(ex);
             Console.WriteLine($"[ERR] ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
         }
     }
