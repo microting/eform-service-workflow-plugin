@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Runtime.InteropServices;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.EformAngularFrontendBase.Infrastructure.Data.Factories;
 using Microting.eFormWorkflowBase.Helpers;
@@ -150,6 +151,20 @@ public class Core : ISdkEventHandler
         {
             var dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
             var dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
+
+
+            int number = int.Parse(dbPrefix);
+            SentrySdk.ConfigureScope(scope =>
+            {
+                scope.SetTag("customerNo", number.ToString());
+                Console.WriteLine("customerNo: " + number);
+                scope.SetTag("osVersion", Environment.OSVersion.ToString());
+                Console.WriteLine("osVersion: " + Environment.OSVersion);
+                scope.SetTag("osArchitecture", RuntimeInformation.OSArchitecture.ToString());
+                Console.WriteLine("osArchitecture: " + RuntimeInformation.OSArchitecture);
+                scope.SetTag("osName", RuntimeInformation.OSDescription);
+                Console.WriteLine("osName: " + RuntimeInformation.OSDescription);
+            });
 
             var pluginDbName = $"Database={dbPrefix}_eform-angular-workflow-plugin;";
             var angularDbName = $"Database={dbPrefix}_Angular;";
