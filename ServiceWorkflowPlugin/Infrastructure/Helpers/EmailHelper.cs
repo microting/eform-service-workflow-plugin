@@ -11,6 +11,7 @@ using SendGrid.Helpers.Mail;
 using Microsoft.EntityFrameworkCore;
 using Microting.EformAngularFrontendBase.Infrastructure.Data;
 using Microting.eFormWorkflowBase.Helpers;
+using Sentry;
 
 namespace ServiceWorkflowPlugin.Infrastructure.Helpers;
 
@@ -56,6 +57,7 @@ public class EmailHelper
         }
         catch (Exception ex)
         {
+            SentrySdk.CaptureException(ex);
             throw new Exception("Failed to send email message", ex);
         }
         finally
