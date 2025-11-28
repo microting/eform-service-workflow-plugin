@@ -506,14 +506,16 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 
                 var sendGridKey =
                     _baseDbContext.ConfigurationValues.Single(x => x.Id == "EmailSettings:SendGridKey");
-                List<string> recepients = await _baseDbContext.Users.Select(x => x.Email).ToListAsync();
                 List<EmailAddress> emailAddresses = new List<EmailAddress>();
-                foreach (string recipient in recepients)
+                var emailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name.ToLower().Replace(" ", "").Trim() ==
+                    workflowCase.CreatedBySiteName
+                        .Replace("Mobil", "")
+                        .Replace("Tablet", "").ToLower().Replace(" ", "").Trim());
+                emailAddresses.Add(new EmailAddress(name: emailRecipient.Name, email: emailRecipient.Email));
+                var solvedByemailRecipient = await _baseDbContext.EmailRecipients.SingleOrDefaultAsync(x => x.Name.ToLower().Replace(" ", "").Trim() == workflowCase.SolvedBy.ToLower().Replace(" ", "").Trim());
+                if (solvedByemailRecipient != null)
                 {
-                    if (!recipient.Contains("admin.com"))
-                    {
-                        emailAddresses.Add(new EmailAddress(recipient));
-                    }
+                    emailAddresses.Add(new EmailAddress(name: solvedByemailRecipient.Name, email: solvedByemailRecipient.Email));
                 }
 
                 var client = new SendGridClient(sendGridKey.Value);
