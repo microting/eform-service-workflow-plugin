@@ -65,7 +65,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
     }
     public async Task Handle(eFormCompleted message)
     {
-        Console.WriteLine("[INF] EFormCompletedHandler.Handle: called");
+        Console.WriteLine("info: EFormCompletedHandler.Handle: called");
 
         _s3Enabled = _sdkCore.GetSdkSetting(Settings.s3Enabled).Result.ToLower() == "true";
         _swiftEnabled = _sdkCore.GetSdkSetting(Settings.swiftEnabled).Result.ToLower() == "true";
@@ -77,13 +77,13 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
 
         if (!int.TryParse(firstEformIdValue, out var firstEformId))
         {
-            const string errorMessage = "[ERROR] First eform id not found in setting";
+            const string errorMessage = "fail: First eform id not found in setting";
             Console.WriteLine(errorMessage);
         }
 
         if (!int.TryParse(secondEformIdValue, out var secondEformId))
         {
-            const string errorMessage = "[ERROR] Second eform id not found in setting";
+            const string errorMessage = "fail: Second eform id not found in setting";
             Console.WriteLine(errorMessage);
         }
 
@@ -534,7 +534,7 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
         catch (Exception ex)
         {
             SentrySdk.CaptureException(ex);
-            Console.WriteLine($"[ERR] ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
+            Console.WriteLine($"fail: ServiceWorkFlowPlugin.CaseCompleted: Got the following error: {ex.Message}");
         }
     }
 }

@@ -59,9 +59,6 @@ public class RebusInstaller : IWindsorInstaller
 
     public void Install(IWindsorContainer container, IConfigurationStore store)
     {
-        Console.WriteLine($"rabbitMqUser: {_rabbitMqUser}");
-        Console.WriteLine($"rabbitMqPassword: {_rabbitMqPassword}");
-        Console.WriteLine($"rabbitMqHost: {_rabbitMqHost}");
         Configure.With(new CastleWindsorContainerAdapter(container))
             .Logging(l => l.ColoredConsole(LogLevel.Info))
             .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", $"{_customerNo}-eform-service-workflow-plugin"))
