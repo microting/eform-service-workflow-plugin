@@ -19,7 +19,7 @@
     <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="Sentry" Version="6.0.0" />
     <PackageReference Include="System.ComponentModel.Composition" Version="10.0.1" />
-    <PackageReference Include="Microting.eFormApi.BasePn" Version="10.0.3" />
+    <PackageReference Include="Microting.eFormApi.BasePn" Version="10.0.4" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Resources\report.docx" />
